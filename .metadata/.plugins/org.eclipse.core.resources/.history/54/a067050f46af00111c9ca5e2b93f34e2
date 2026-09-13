@@ -1,0 +1,30 @@
+package com.spring.product.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.spring.product.entity.Product;
+import com.spring.product.repository.ProductRepository;
+
+@Service
+public class ProductService {
+	
+	private ProductRepository productRepository;
+	
+	private ProductService(ProductRepository productRepository)
+	{
+		this.productRepository = productRepository;
+	}
+	
+	public String createOrder(Product product) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public List<Product> getOrders() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+}

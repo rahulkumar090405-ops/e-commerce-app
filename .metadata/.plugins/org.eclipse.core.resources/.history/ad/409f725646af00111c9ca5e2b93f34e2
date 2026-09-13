@@ -1,0 +1,9 @@
+package com.spring.product.repository;
+
+import org.springframework.data.jpa.repository.config.JpaRepositoryConfigExtension;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class ProductRepository extends JpaRepositoryConfigExtension< {
+
+}
