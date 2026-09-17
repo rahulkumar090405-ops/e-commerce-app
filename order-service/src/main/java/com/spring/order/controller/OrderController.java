@@ -2,6 +2,7 @@ package com.spring.order.controller;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.spring.order.dto.OrderResponse;
 import com.spring.order.entity.Order;
 import com.spring.order.service.OrderService;
 
@@ -23,10 +25,11 @@ public class OrderController {
 		this.orderService = orderService;
 	}
 	
-	@PostMapping
-	public Order createOrder(@RequestBody Order order)
+	@PostMapping("{productId}")
+	public ResponseEntity<OrderResponse> createOrder(@PathVariable Long productId)
 	{
-		return orderService.createOrder(order);
+		Order order = orderService.createOrder(productId);
+		return ResponseEntity.ok(new OrderResponse(order.getId(),order.getProductId(),"Order placed successfully!"));
 		
 	}
 	

@@ -1,37 +1,28 @@
 package com.spring.product.entity;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
+import com.spring.product.utils.BaseEntity;
+
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name="product")
-public class Product {
+@Table(name="products")
+public class Product extends BaseEntity implements Serializable {
 	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-	
-	private String name;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private String category;
+	private String productName;
 	private String description;
 	private BigDecimal price;
+	private BigDecimal stock;
 	
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
 	public String getDescription() {
 		return description;
 	}
@@ -43,6 +34,24 @@ public class Product {
 	}
 	public void setPrice(BigDecimal price) {
 		this.price = price;
+	}
+	public String getProductName() {
+		return productName;
+	}
+	public void setProductName(String productName) {
+		this.productName = productName;
+	}
+	public String getCategory() {
+		return category;
+	}
+	public void setCategory(String category) {
+		this.category = category;
+	}
+	public BigDecimal getStock() {
+		return stock;
+	}
+	public void setStock(BigDecimal stock) {
+		this.stock = stock;
 	}
 	
 }

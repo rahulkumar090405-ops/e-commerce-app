@@ -5,8 +5,14 @@ services:
     image: rambo1559/user-service:v1.0.0
     container_name: user-service
     ports:
-      - "8080:8080"
+      - "8081:8081"
 
+  product-service:
+    build: ./product-service
+    image: rambo1559/product-service:v1.0.0
+    container_name: product-service
+    ports:
+      - "8082:8082"
   order-service:
     build: ./order-service
     image: rambo1559/order-service:v1.0.0
@@ -14,9 +20,4 @@ services:
     ports:
       - "8083:8083"
 
-    product-service:
-    build: ./product-service
-    image: rambo1559/product-service:v1.0.0
-    container_name: product-service
-    ports:
-      - "8082:8082"
+    

@@ -1,6 +1,9 @@
 package com.spring.order.entity;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
+
+import com.spring.order.utils.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,21 +14,23 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name="orders")
-public class Order {
+public class Order extends BaseEntity implements Serializable {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	private Long userId;
 	private Long productId;
+	private String productName;
+	private BigDecimal quantity;
 	private BigDecimal basePrice;
 	private BigDecimal discount;
 	private BigDecimal finalPrice;
 	private String status;
 	@Column(name="payment_status")
 	private String paymentStatus;
-	
 	
 	public Long getProductId() {
 		return productId;
@@ -57,12 +62,6 @@ public class Order {
 	public void setPaymentStatus(String paymentStatus) {
 		this.paymentStatus = paymentStatus;
 	}
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
 	public Long getUserId() {
 		return userId;
 	}
@@ -74,6 +73,18 @@ public class Order {
 	}
 	public void setStatus(String status) {
 		this.status = status;
+	}
+	public String getProductName() {
+		return productName;
+	}
+	public void setProductName(String productName) {
+		this.productName = productName;
+	}
+	public BigDecimal getQuantity() {
+		return quantity;
+	}
+	public void setQuantity(BigDecimal quantity) {
+		this.quantity = quantity;
 	}
 
 }

@@ -2,3 +2,10 @@
 1789283701700	Delete element
 1789283717037	Rename package 'com.ecommerce.product'
 1789285248183	Delete element
+1789587445198	Encapsulate field 'productName, ...'
+1789587854111	Rename type 'Timestamp'
+1789588014218	Encapsulate field 'category, ...'
+1789591749070	Copy compilation unit
+1789592424367	Rename resource 'product-detail'
+1789592438671	Delete element
+1789673938000	Encapsulate field 'stock, ...'

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.spring.product.entity.Product;
+import com.spring.product.exception.BadRequestException;
 import com.spring.product.repository.ProductRepository;
 
 @Service
@@ -18,18 +19,20 @@ public class ProductService {
 	}
 	
 	public Product createOrder(Product product) {
-		// TODO Auto-generated method stub
 		return productRepository.save(product);
 	}
 
-	public List<Product> getOrders() {
-		// TODO Auto-generated method stub
+	public List<Product> getAllProducts() {
 		return productRepository.findAll();
 	}
 
-	public Product getOrderDetail(Long id) {
+	public Product getProduct(Long id) {
+		return productRepository.findById(id).orElseThrow(() -> new BadRequestException("Product not found"));
+	}
+
+	public Product updateProduct(Long id, Product product) {
 		// TODO Auto-generated method stub
-		return productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
+		return productRepository.save(product);
 	}
 
 }
