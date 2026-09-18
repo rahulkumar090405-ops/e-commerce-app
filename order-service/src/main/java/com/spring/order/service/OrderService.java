@@ -56,4 +56,9 @@ public class OrderService {
 		return orderRepository.findByUserId(userId);
 	}
 
+	public List<Order> getAllOrders() {
+		// TODO Auto-generated method stub
+		return orderRepository.findAll();
+	}
+
 }

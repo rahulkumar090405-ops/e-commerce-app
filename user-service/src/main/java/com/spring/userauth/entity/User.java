@@ -1,9 +1,12 @@
 package com.spring.userauth.entity;
 
+import java.io.Serializable;
 import java.util.List;
 
 import com.spring.userauth.dto.OrderDto;
+import com.spring.userauth.utills.BaseEntity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,18 +16,25 @@ import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "users")
-public class User {
+public class User extends BaseEntity implements Serializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-  
-    private Long id;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private String name;
     
-    private String name;
-
+    @Column(nullable = false, unique = true)
     private String email;
+    
+    @Column(nullable = false)
+    private String password;
 
     private Integer age;
+    
+    @Column(nullable = false)
+    private String role;
     
     @Transient
     private List<OrderDto> orders;
@@ -36,10 +46,6 @@ public class User {
         this.name = name;
         this.email = email;
         this.age = age;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getName() {
@@ -72,5 +78,21 @@ public class User {
 
 	public void setOrders(List<OrderDto> orders) {
 		this.orders = orders;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
 	}
 }

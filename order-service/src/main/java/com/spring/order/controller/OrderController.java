@@ -40,6 +40,13 @@ public class OrderController {
 		
 	}
 	
+	@GetMapping
+	public List<Order> getOrdersAll()
+	{
+		return orderService.getAllOrders();
+		
+	}
+	
 	
 	
 }
