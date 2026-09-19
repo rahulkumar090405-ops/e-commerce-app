@@ -3,6 +3,7 @@ package com.spring.userauth.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,11 +27,11 @@ public class UserController {
 		this.userService = userService;
 	}
 
-	@PostMapping("/random")
-	public User createRandomUser()
+	@GetMapping("/me")
+	public String me(Authentication authentication)
 	{
-		return userService.createRandomUser();
-
+        return "Logged in as: "
+                + authentication.getName();
 	}
 
 	@PostMapping

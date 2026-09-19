@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.spring.order.dto.OrderResponse;
 import com.spring.order.dto.ProductResponse;
 import com.spring.order.entity.Order;
 import com.spring.order.repository.OrderRepository;
@@ -56,9 +57,26 @@ public class OrderService {
 		return orderRepository.findByUserId(userId);
 	}
 
-	public List<Order> getAllOrders() {
-		// TODO Auto-generated method stub
-		return orderRepository.findAll();
+	public List<OrderResponse> getAllOrders() {
+
+	    return orderRepository.findAll()
+	            .stream()
+	            .map(order -> new OrderResponse(
+	                    order.getId(),
+	                    order.getUserId(),
+	                    order.getProductId(),
+	                    order.getProductName(),
+	                    order.getQuantity(),
+	                    order.getBasePrice(),
+	                    order.getDiscount(),
+	                    order.getFinalPrice(),
+	                    order.getStatus(),
+	                    order.getPaymentStatus(),
+	                    order.getCreatedDate(),
+	                    order.getUpdatedDate()
+
+	            ))
+	            .toList();
 	}
 
 }
