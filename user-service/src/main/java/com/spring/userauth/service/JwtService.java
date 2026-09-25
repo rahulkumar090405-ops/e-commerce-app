@@ -1,12 +1,16 @@
 package com.spring.userauth.service;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import com.spring.userauth.entity.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -29,18 +33,21 @@ public class JwtService {
         this.expiration = expiration;
     }
 
-    public String generateToken(UserDetails userDetails)
-    {
-    	Date now = new Date();
-    	
-    	Date expiryDate = new Date(now.getTime() +expiration);
-		
-    	return Jwts.builder()
-    			.setSubject(userDetails.getUsername())
-    			.issuedAt(now)
-    			.expiration(expiryDate)
-    			.signWith(secretKey)
-    			.compact();
+    public String generateToken(User user) {
+
+        List<String> roles = user.getRoles()
+                .stream()
+                .map(role -> role.getName().name())
+                .toList();
+
+        return Jwts.builder()
+                .subject(user.getEmail())
+                .claim("userId", user.getId())
+                .claim("roles", roles)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .signWith(secretKey)
+                .compact();
     }
     
     public String extractEmail(String token)

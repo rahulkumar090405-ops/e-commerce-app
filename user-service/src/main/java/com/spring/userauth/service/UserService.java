@@ -1,13 +1,12 @@
 package com.spring.userauth.service;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 
 import org.springframework.stereotype.Service;
 
 import com.spring.userauth.entity.User;
+import com.spring.userauth.exception.UserNotFoundException;
 import com.spring.userauth.repository.UserRepository;
 
 @Service
@@ -48,7 +47,7 @@ public class UserService {
 
 	public User findById(Long id) {
 		// TODO Auto-generated method stub
-		return userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
+		return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
 	}
 
 	

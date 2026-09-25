@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.spring.product.entity.Product;
 import com.spring.product.exception.BadRequestException;
+import com.spring.product.exception.ProductNotFoundException;
 import com.spring.product.repository.ProductRepository;
 
 @Service
@@ -27,7 +28,7 @@ public class ProductService {
 	}
 
 	public Product getProduct(Long id) {
-		return productRepository.findById(id).orElseThrow(() -> new BadRequestException("Product not found"));
+		return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException("Product not found"));
 	}
 
 	public Product updateProduct(Long id, Product product) {

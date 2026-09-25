@@ -27,7 +27,7 @@ public class BaseEntity {
 	private Date updatedDate;
 
 	@Version
-	private int version;
+	private Integer version = 0;
 
 	public Date getCreatedDate() {
 		return createdDate;
@@ -45,11 +45,11 @@ public class BaseEntity {
 		this.updatedDate = updatedDate;
 	}
 
-	public int getVersion() {
+	public Integer getVersion() {
 		return version;
 	}
 
-	public void setVersion(int version) {
+	public void setVersion(Integer version) {
 		this.version = version;
 	}
 

@@ -3,12 +3,15 @@ package com.spring.order.service;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.spring.order.dto.OrderResponse;
 import com.spring.order.dto.ProductResponse;
 import com.spring.order.entity.Order;
+import com.spring.order.exception.OrderNotFoundException;
 import com.spring.order.repository.OrderRepository;
 import com.spring.order.service.client.ProductClient;
 
@@ -51,7 +54,7 @@ public class OrderService {
 		return orderRepository.save(order);
 	}
 
-	public List<Order> getOrdersByUserId(Long userId) {
+	public List<Order> getOrdersByUserId(Long userId, Authentication authentication) {
 		// TODO Auto-generated method stub
 
 		return orderRepository.findByUserId(userId);
@@ -77,6 +80,27 @@ public class OrderService {
 
 	            ))
 	            .toList();
+	}
+
+	public Order getOrderById(Long id) {
+		// TODO Auto-generated method stub
+		return orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException("Order not found."));
+	}
+
+	public void deleteOrder(Long id) {
+		// TODO Auto-generated method stub
+		 orderRepository.deleteById(id);
+	}
+
+	public Order updateOrder(Long id, Order updatedOrder) {
+		Order existingOrder = orderRepository.findById(id)
+	            .orElseThrow(() ->
+	                    new RuntimeException("Order not found: " + id));
+
+	    existingOrder.setStatus(updatedOrder.getStatus());
+	    existingOrder.setBasePrice(updatedOrder.getBasePrice());
+	    existingOrder.setFinalPrice(updatedOrder.getFinalPrice());
+	    return orderRepository.save(existingOrder);
 	}
 
 }

@@ -51,7 +51,7 @@ public class ProductController {
 	}
 
 	@PutMapping("/{id}")
-	public Product updateRoom(@PathVariable("id") Long id,@RequestBody Product product)
+	public Product updateProduct(@PathVariable("id") Long id,@RequestBody Product product)
 	{
 		if(id != product.getId())
 		{

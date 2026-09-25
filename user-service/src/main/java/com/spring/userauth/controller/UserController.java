@@ -3,6 +3,7 @@ package com.spring.userauth.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,6 +41,7 @@ public class UserController {
 		return userService.createUser(user);
 	}
 
+	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/{id}")
 	public User getUser(@PathVariable Long id)
 	{
@@ -53,6 +55,7 @@ public class UserController {
 		return user;
 	}
 
+	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping
 	public List<User> getAllUser()
 	{

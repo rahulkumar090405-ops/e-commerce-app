@@ -73,7 +73,17 @@ public class JwtAuthenticationFilter
             if (jwtService.isTokenValid(
                     token,
                     userDetails)) {
+            	
+            	 System.out.println(
+            	            "Authenticated User: " +
+            	            userDetails.getUsername()
+            	    );
 
+            	    System.out.println(
+            	            "Authorities: " +
+            	            userDetails.getAuthorities()
+            	    );
+            	    
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 userDetails,

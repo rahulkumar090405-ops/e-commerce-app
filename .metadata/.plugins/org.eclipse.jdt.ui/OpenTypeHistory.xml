@@ -1,2 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<typeInfoHistroy/>
+<typeInfoHistroy>
+    <typeInfo handle="=order-service/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;com.spring.order.utils{BaseEntity.java[BaseEntity" modifiers="1" timestamp="1789674736515"/>
+    <typeInfo handle="=user-service/C:\/Program Files\/Eclipse Adoptium\/jdk-21.0.12.8-hotspot\/lib\/jrt-fs.jar`java.base=/javadoc_location=/https:\/\/docs.oracle.com\/en\/java\/javase\/21\/docs\/api\/=/=/maven.pomderived=/true=/&lt;java.lang(Object.class[Object" modifiers="33" timestamp="1784699760000"/>
+</typeInfoHistroy>
