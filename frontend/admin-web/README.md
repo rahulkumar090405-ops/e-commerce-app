@@ -1,4 +1,4 @@
-# admin-web
+# everyday admin (`admin-web`)
 
 Standalone React + Vite admin application. Use Node.js 22 LTS or newer supported LTS and npm.
 

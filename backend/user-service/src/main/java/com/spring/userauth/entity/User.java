@@ -27,6 +27,15 @@ public class User extends BaseEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private String name;
+
+    private String firstName;
+
+    private String lastName;
+
+    private String gender;
+
+    @Column(length = 20)
+    private String mobile;
     
     @Column(nullable = false, unique = true)
     private String email;
@@ -62,6 +71,38 @@ public class User extends BaseEntity implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getMobile() {
+        return mobile;
+    }
+
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
     }
 
     public String getEmail() {

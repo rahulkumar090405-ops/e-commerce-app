@@ -17,6 +17,13 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import io.jsonwebtoken.Claims;
+
 @Component
 public class JwtAuthenticationFilter
         extends OncePerRequestFilter {
@@ -74,22 +81,22 @@ public class JwtAuthenticationFilter
                     token,
                     userDetails)) {
             	
-            	 System.out.println(
-            	            "Authenticated User: " +
-            	            userDetails.getUsername()
-            	    );
-
-            	    System.out.println(
-            	            "Authorities: " +
-            	            userDetails.getAuthorities()
-            	    );
             	    
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+            	Claims claims = jwtService.extractAllClaims(token);
+
+            	List<String> roles = claims.get("roles", List.class);
+
+            	List<GrantedAuthority> authorities = roles.stream()
+            	        .map(role -> new SimpleGrantedAuthority(role))
+            	        .map(authority -> (GrantedAuthority) authority)
+            	        .toList();
+
+            	UsernamePasswordAuthenticationToken authentication =
+            	        new UsernamePasswordAuthenticationToken(
+            	                userDetails,
+            	                null,
+            	                authorities
+            	        );
 
                 authentication.setDetails(
                         new WebAuthenticationDetailsSource()

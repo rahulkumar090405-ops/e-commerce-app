@@ -6,77 +6,18 @@ import {
   Route,
   Routes,
   useLocation,
-  useNavigate,
 } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { orders, stats } from "./data/dashboard";
 import { serviceUrls } from "./config/services";
 import { OrderList, ProductList, CategoryList } from "./pages/Lists";
-
-function Login() {
-  const { user, login } = useAuth();
-  const navigate = useNavigate();
-  if (user) return <Navigate to="/dashboard" replace />;
-  function submit(event) {
-    event.preventDefault();
-    login(new FormData(event.currentTarget).get("email").trim());
-    navigate("/dashboard", { replace: true });
-  }
-  return (
-    <main className="login-layout">
-      <section className="login-story">
-        <Link className="brand" to="/">
-          c<span>Commerce</span>
-        </Link>
-        <div>
-          <p className="eyebrow">YOUR STORE, SIMPLIFIED</p>
-          <h1>
-            A little clarity.
-            <br />A lot of possibility.
-          </h1>
-          <p>One home for your products, orders, and customers.</p>
-        </div>
-        <small>Commerce / Administration</small>
-      </section>
-      <section className="login-form-panel">
-        <form className="login-form" onSubmit={submit}>
-          <p className="eyebrow">ADMIN WORKSPACE</p>
-          <h2>Welcome back.</h2>
-          <p className="muted">Sign in to your store dashboard.</p>
-          <label htmlFor="email">Email address</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="admin@example.com"
-            autoComplete="username"
-            required
-          />
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Enter your password"
-            autoComplete="current-password"
-            required
-            minLength={6}
-          />
-          <button className="primary" type="submit">
-            Sign in <span>→</span>
-          </button>
-          <p className="demo-note">
-            Demo mode: use any valid email and a password of at least 6
-            characters. Backend authentication is ready for you to integrate.
-          </p>
-        </form>
-      </section>
-    </main>
-  );
-}
+import Users from "./pages/Users";
+import Profile from "./pages/Profile";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function AdminLayout() {
-  const { user, logout } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const { pathname } = useLocation();
   const pageTitle =
     {
@@ -84,13 +25,16 @@ function AdminLayout() {
       "/orders": "Orders",
       "/products": "Products",
       "/categories": "Categories",
+      "/users": "Users",
+      "/profile": "My profile",
     }[pathname] || "Workspace";
+  if (isLoading) return <main className="auth-loading">Checking your administrator session…</main>;
   if (!user) return <Navigate to="/login" replace />;
   return (
     <div className="admin-layout">
       <aside className="sidebar">
         <Link className="brand" to="/dashboard">
-          c<span>Commerce</span>
+          everyday<span>adm.</span>
         </Link>
         <p className="nav-label">WORKSPACE</p>
         <nav aria-label="Admin navigation">
@@ -99,6 +43,8 @@ function AdminLayout() {
             { to: "/orders", label: "Orders", icon: "↗" },
             { to: "/products", label: "Products", icon: "□" },
             { to: "/categories", label: "Categories", icon: "⊞" },
+            { to: "/users", label: "Users", icon: "◉" },
+            { to: "/profile", label: "My profile", icon: "○" },
           ].map((item) => (
             <NavLink
               key={item.to}
@@ -239,7 +185,7 @@ function Dashboard() {
         </div>
       </section>
       <footer>
-        Commerce Admin <span>Built for your next big idea.</span>
+        everyday admin <span>Built for your next big idea.</span>
       </footer>
     </main>
   );
@@ -249,11 +195,14 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route element={<AdminLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/orders" element={<OrderList />} />
         <Route path="/products" element={<ProductList />} />
         <Route path="/categories" element={<CategoryList />} />
+        <Route path="/users" element={<Users />} />
+        <Route path="/profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

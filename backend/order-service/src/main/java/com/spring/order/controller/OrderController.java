@@ -21,7 +21,7 @@ import com.spring.order.entity.Order;
 import com.spring.order.service.OrderService;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/api/orders")
 public class OrderController {
 
     private final OrderService orderService;

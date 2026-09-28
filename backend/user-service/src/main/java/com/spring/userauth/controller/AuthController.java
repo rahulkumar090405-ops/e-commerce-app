@@ -1,7 +1,7 @@
 package com.spring.userauth.controller;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,7 +13,7 @@ import com.spring.userauth.dto.RegisterRequest;
 import com.spring.userauth.service.AuthService;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 	
 	private final AuthService authService;
@@ -25,7 +25,7 @@ public class AuthController {
 	}
 	
 	@PostMapping("/register")
-	public String register(@RequestBody RegisterRequest request)
+	public String register(@Valid @RequestBody RegisterRequest request)
 	{
 		return authService.register(request);
 	}
@@ -35,6 +35,12 @@ public class AuthController {
 	public AuthResponse login(@RequestBody LoginRequest loginRequest)
 	{
 		return authService.login(loginRequest);
+	}
+
+	@PostMapping("/logout")
+	public AuthResponse logout(@RequestBody LoginRequest loginRequest)
+	{
+		return authService.logout(loginRequest);
 	}
 	
 }

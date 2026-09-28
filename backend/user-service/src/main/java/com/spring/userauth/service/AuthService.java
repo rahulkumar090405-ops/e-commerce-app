@@ -1,16 +1,19 @@
 package com.spring.userauth.service;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.spring.userauth.dto.AuthResponse;
 import com.spring.userauth.dto.LoginRequest;
@@ -18,11 +21,19 @@ import com.spring.userauth.dto.RegisterRequest;
 import com.spring.userauth.entity.Role;
 import com.spring.userauth.entity.User;
 import com.spring.userauth.enumer.RoleName;
+import com.spring.userauth.exception.EmailAlreadyExistsException;
+import com.spring.userauth.exception.InvalidPasswordException;
+import com.spring.userauth.exception.UserNotFoundException;
 import com.spring.userauth.repository.RoleRepository;
 import com.spring.userauth.repository.UserRepository;
 
 @Service
 public class AuthService {
+
+	private static final Set<RoleName> ADMIN_WORKSPACE_ROLES = Set.of(
+			RoleName.ROLE_ADMIN,
+			RoleName.ROLE_USER,
+			RoleName.ROLE_EMPLOYEE);
 
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
@@ -42,47 +53,82 @@ public class AuthService {
 	public String register(RegisterRequest request)
 	{
 		if (userRepository.findByEmail(request.email()).isPresent()) {
-		    return "Email already registered";
+		    throw new EmailAlreadyExistsException("Email already registered");
 		}
+
+		RoleName roleName = registrationRole(request.registrationType());
+		Role registrationRole = roleRepository.findByName(roleName)
+				.orElseThrow(() -> new RuntimeException("Registration role not found: " + roleName));
+
 		User user = new User();
 		user.setCreatedDate(new Date());
 		user.setUpdatedDate(new Date());
-		user.setName(request.name());
+		user.setFirstName(request.firstName().trim());
+		user.setLastName(request.lastName().trim());
+		user.setGender(request.gender().trim());
+		user.setMobile(request.mobile().trim());
+		user.setName(user.getFirstName() + " " + user.getLastName());
 		user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
-        
-        Set<Role> roles = new HashSet<>();
-        for (RoleName roleName : request.roles()) {
-
-            Role role = roleRepository.findByName(roleName)
-                    .orElseThrow(() ->
-                            new RuntimeException("Role not found: " + roleName));
-
-            roles.add(role);
-        }
-        user.setRoles(roles);
+		user.setRoles(Set.of(registrationRole));
 		userRepository.save(user);
 		return "User registered successfully.";
 	}
+
+	private RoleName registrationRole(String registrationType) {
+		if (registrationType == null || registrationType.isBlank()
+				|| "CUSTOMER".equalsIgnoreCase(registrationType)) {
+			return RoleName.ROLE_CUSTOMER;
+		}
+
+		if ("USER".equalsIgnoreCase(registrationType)) {
+			return RoleName.ROLE_USER;
+		}
+
+		throw new ResponseStatusException(
+				HttpStatus.BAD_REQUEST,
+				"Registration type must be CUSTOMER or USER");
+	}
 	
-	public AuthResponse login(LoginRequest request)
-	{
-		Authentication authentication =
-                authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                        request.email(),
-                        request.password()
-                    )
-                );
+	public AuthResponse login(LoginRequest request) {
+		Set<RoleName> allowedRoles = "ADMIN".equalsIgnoreCase(request.loginType())
+				? ADMIN_WORKSPACE_ROLES
+				: Set.of();
+		return authenticate(request, allowedRoles);
+	}
 
-		User user = userRepository.findByEmail(request.email())
-		        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+	private AuthResponse authenticate(LoginRequest request, Set<RoleName> allowedRoles) {
 
-	    String token =
-	            jwtService.generateToken(user);
+	    User user = userRepository.findByEmail(request.email())
+	        .orElseThrow(() ->
+	            new UserNotFoundException("User not found"));
+
+	    try {
+	        authenticationManager.authenticate(
+	            new UsernamePasswordAuthenticationToken(
+	                request.email(),
+	                request.password()
+	            )
+	        );
+	    } catch (BadCredentialsException e) {
+	        throw new InvalidPasswordException("Invalid password");
+	    }
+
+	    if (!allowedRoles.isEmpty() && user.getRoles().stream()
+	    			.noneMatch(role -> allowedRoles.contains(role.getName()))) {
+	    	throw new ResponseStatusException(
+	    			HttpStatus.FORBIDDEN,
+	    			"Administrator access is required");
+	    }
+
+	    String token = jwtService.generateToken(user);
 
 	    return new AuthResponse(token);
+	}
 
+	public AuthResponse logout(LoginRequest loginRequest) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

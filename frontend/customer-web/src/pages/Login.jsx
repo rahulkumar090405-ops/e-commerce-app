@@ -1,14 +1,29 @@
+import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   if (user) return <Navigate to="/" replace />;
-  function submit(event) {
+  
+  async function submit(event) {
     event.preventDefault();
-    login(new FormData(event.currentTarget).get("email").trim());
-    navigate("/", { replace: true });
+    const data = new FormData(event.currentTarget);
+    const email = data.get("email").trim();
+    const password = data.get("password");
+    setError("");
+    setSubmitting(true);
+    try {
+       await login(email, password);
+      navigate("/", { replace: true });
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setSubmitting(false);
+    }
   }
   return (
     <main className="login-page">
@@ -45,13 +60,11 @@ export default function Login() {
           required
           minLength={6}
         />
-        <button type="submit" className="primary">
+        <button type="submit" className="primary" disabled={submitting}>
           Sign in <span>→</span>
         </button>
-        <p className="demo-note">
-          Demo login: use any valid email and a password of at least 6
-          characters. User-service integration is pending.
-        </p>
+        {error && <p role="alert">{error}</p>}
+        <p className="auth-link">New here? <Link to="/register">Create an account</Link></p>
         <Link className="continue-link" to="/">
           ← Back to the shop
         </Link>

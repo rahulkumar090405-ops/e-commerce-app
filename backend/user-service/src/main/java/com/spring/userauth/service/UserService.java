@@ -2,10 +2,13 @@ package com.spring.userauth.service;
 
 import java.util.List;
 import java.util.Random;
+import java.util.Comparator;
 
 import org.springframework.stereotype.Service;
 
 import com.spring.userauth.entity.User;
+import com.spring.userauth.dto.ProfileUpdateRequest;
+import com.spring.userauth.dto.UserProfileResponse;
 import com.spring.userauth.exception.UserNotFoundException;
 import com.spring.userauth.repository.UserRepository;
 
@@ -48,6 +51,49 @@ public class UserService {
 	public User findById(Long id) {
 		// TODO Auto-generated method stub
 		return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
+	}
+
+	public UserProfileResponse getProfileByEmail(String email) {
+		return toProfileResponse(findByEmail(email));
+	}
+
+	public UserProfileResponse updateProfile(String email, ProfileUpdateRequest request) {
+		User user = findByEmail(email);
+		user.setFirstName(request.firstName().trim());
+		user.setLastName(request.lastName().trim());
+		user.setGender(request.gender().trim());
+		user.setMobile(request.mobile().trim());
+		user.setName(user.getFirstName() + " " + user.getLastName());
+		return toProfileResponse(userRepository.save(user));
+	}
+
+	public List<UserProfileResponse> getAllProfiles() {
+		return userRepository.findAll().stream()
+				.map(this::toProfileResponse)
+				.toList();
+	}
+
+	private User findByEmail(String email) {
+		return userRepository.findByEmail(email)
+				.orElseThrow(() -> new UserNotFoundException("User not found"));
+	}
+
+	private UserProfileResponse toProfileResponse(User user) {
+		List<String> roles = user.getRoles().stream()
+				.map(role -> role.getName().name())
+				.sorted(Comparator.naturalOrder())
+				.toList();
+
+		return new UserProfileResponse(
+				user.getId(),
+				user.getFirstName(),
+				user.getLastName(),
+				user.getName(),
+				user.getEmail(),
+				user.getGender(),
+				user.getMobile(),
+				roles,
+				user.getCreatedDate());
 	}
 
 	

@@ -1,7 +1,5 @@
 import { serviceUrls } from "../config/services";
 
-// Integration helper; demo screens do not make backend requests.
-// Define your endpoint paths and authentication policy when connecting services.
 export async function apiRequest(
   service,
   path,
@@ -19,10 +17,17 @@ export async function apiRequest(
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     },
   );
-  if (!response.ok)
-    throw new Error(`${service}-service request failed (${response.status})`);
+  const isJson = response.headers.get("content-type")?.includes("json");
+  const payload = isJson
+    ? await response.json().catch(() => null)
+    : await response.text();
+
+  if (!response.ok) {
+    const message = payload?.detail || payload?.message || payload?.error ||
+      (typeof payload === "string" && payload) ||
+      `${service}-service request failed (${response.status})`;
+    throw new Error(message);
+  }
   if (response.status === 204) return null;
-  return response.headers.get("content-type")?.includes("application/json")
-    ? response.json()
-    : response.text();
+  return payload;
 }

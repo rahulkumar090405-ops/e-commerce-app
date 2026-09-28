@@ -23,13 +23,7 @@ export default function Layout() {
         </nav>
         <div className="header-actions">
           {user ? (
-            <button
-              className="text-button"
-              onClick={logout}
-              title={`Signed in as ${user.email}`}
-            >
-              Sign out
-            </button>
+            <><NavLink to="/profile">Profile</NavLink><button className="text-button" onClick={logout} title={`Signed in as ${user.email}`}>Sign out</button></>
           ) : (
             <NavLink to="/login">Sign in</NavLink>
           )}

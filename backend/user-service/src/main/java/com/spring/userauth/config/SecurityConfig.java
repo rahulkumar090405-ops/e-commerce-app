@@ -1,5 +1,7 @@
 package com.spring.userauth.config;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,6 +16,9 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.spring.userauth.security.CustomAccessDeniedHandler;
 import com.spring.userauth.security.JwtAuthenticationFilter;
@@ -37,6 +42,7 @@ public class SecurityConfig {
 	{
 		http
 		.csrf(csrf -> csrf.disable())
+		.cors(cors ->{})
 		.sessionManagement(session ->
 		session.sessionCreationPolicy(
 				SessionCreationPolicy.STATELESS
@@ -49,25 +55,21 @@ public class SecurityConfig {
 	    )
 		.authorizeHttpRequests(auth -> auth
 				.requestMatchers(
-						"/auth/register",
-						"/auth/login"
+						"/api/auth/register",
+						"/api/auth/login"
 						).permitAll()
 
 				// Admin only
-				.requestMatchers("/admin/**")
-				.hasRole("ADMIN")
+				.requestMatchers("/api/admin/**")
+				.hasAnyRole("ADMIN", "USER", "EMPLOYEE")
 
 				// Employee only
-				.requestMatchers("/employee/**")
+				.requestMatchers("/api/employee/**")
 				.hasRole("EMPLOYEE")
 
 				// Customer only
-				.requestMatchers("/customer/**")
+				.requestMatchers("/api/customer/**")
 				.hasRole("CUSTOMER")
-
-//				// User or Admin
-//				.requestMatchers("/users/**")
-//				.hasRole("ADMIN")
 
 				.anyRequest().authenticated()
 				)
@@ -77,6 +79,31 @@ public class SecurityConfig {
 				);
 
 		return http.build();
+	}
+	
+	@Bean
+	CorsConfigurationSource  corsConfigurationSource()
+	{
+		CorsConfiguration  configuration = new  CorsConfiguration ();
+		
+		configuration.setAllowedOrigins(List.of("http://localhost:5174","http://localhost:5173"));
+		
+		configuration.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+		
+		configuration.setAllowedHeaders(List.of("Authorization",
+		        "Content-Type"));
+		
+		configuration.setAllowCredentials(true);
+		
+		 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+		 source.registerCorsConfiguration(
+			        "/**",
+			        configuration
+			    );
+		
+		return source;
+		
 	}
 
 	@Bean
