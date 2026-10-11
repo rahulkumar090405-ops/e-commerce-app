@@ -1,71 +1,69 @@
-import { serviceUrls } from "../config/services";
+import { serviceUrls } from "../config/services.js";
 
-const TOKEN_KEY = "everyday-admin-auth-token";
-const USER_KEY = "everyday-admin-auth-user";
+const SESSION_TOKEN_KEY = "everyday-admin-session-token";
 
-export function getSessionToken() {
+function readStoredToken() {
   try {
-    return sessionStorage.getItem(TOKEN_KEY);
+    return sessionStorage.getItem(SESSION_TOKEN_KEY);
   } catch {
     return null;
   }
 }
 
-export function saveSessionToken(token) {
-  try {
-    sessionStorage.setItem(TOKEN_KEY, token);
-  } catch {
-    /* The current browser does not allow session storage. */
-  }
-}
+let token = readStoredToken();
+let currentUser = null;
+const listeners = new Set();
 
-export function getSessionUser() {
+export function getSessionToken() { return token; }
+export function saveSessionToken(value) {
   try {
-    const stored = JSON.parse(sessionStorage.getItem(USER_KEY));
-    return stored && typeof stored === "object" ? stored : null;
+    sessionStorage.setItem(SESSION_TOKEN_KEY, value);
   } catch {
-    return null;
+    throw new Error("Unable to save the admin session in this browser.");
   }
+  token = value;
 }
-
-export function saveSessionUser(user) {
-  try {
-    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
-  } catch {
-    /* The current browser does not allow session storage. */
-  }
+export function getSessionUser() { return currentUser; }
+export function saveSessionUser(value) { currentUser = value; }
+export function onAuthCleared(listener) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
 }
-
 export function clearSessionAuth() {
+  token = null;
+  currentUser = null;
   try {
-    sessionStorage.removeItem(TOKEN_KEY);
-    sessionStorage.removeItem(USER_KEY);
-  } catch {
-    /* The current browser does not allow session storage. */
-  }
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
+  } catch { /* Storage may be unavailable. */ }
+  for (const listener of listeners) listener();
 }
+// Clean up credentials retained by the previous implementation.
+try {
+  sessionStorage.removeItem("everyday-admin-auth-token");
+  sessionStorage.removeItem("everyday-admin-auth-user");
+} catch { /* Storage may be unavailable. */ }
 
-// Integration helper; demo screens do not make backend requests.
-// Define your endpoint paths and authentication policy when connecting services.
 export async function apiRequest(
   service,
   path,
   { body, headers, ...options } = {},
 ) {
   if (!serviceUrls[service]) throw new Error(`Unknown service: ${service}`);
-  const token = getSessionToken();
+  const requestToken = getSessionToken();
   const response = await fetch(
     `${serviceUrls[service].replace(/\/$/, "")}/${path.replace(/^\//, "")}`,
     {
+      credentials: "omit",
       ...options,
       headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(requestToken ? { Authorization: `Bearer ${requestToken}` } : {}),
         ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
         ...headers,
       },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     },
   );
+  if (response.status === 401 && requestToken) clearSessionAuth();
   if (response.status === 204) return null;
 
   const isJson = response.headers.get("content-type")?.includes("json");

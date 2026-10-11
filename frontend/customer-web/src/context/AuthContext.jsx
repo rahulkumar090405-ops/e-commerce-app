@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import { apiRequest } from "../services/api";
+import { exchangeGoogleCustomerToken, getCustomerProfile } from "../services/authApi";
 
 const AuthContext = createContext(null);
 const KEY = "commerce-customer-session";
@@ -35,6 +36,25 @@ export function AuthProvider({ children }) {
     setUser(session);
     return session;
   }
+
+  async function completeGoogleLogin() {
+    const response = await exchangeGoogleCustomerToken();
+    if (typeof response?.token !== "string" || !response.token) {
+      throw new Error("Authentication failed: no token returned.");
+    }
+    const profile = await getCustomerProfile(response.token);
+    if (!profile?.roles?.includes("ROLE_CUSTOMER")) {
+      throw new Error("This Google account does not have customer access.");
+    }
+    const session = { ...profile, token: response.token };
+    try {
+      sessionStorage.setItem(KEY, JSON.stringify(session));
+    } catch {
+      /* In-memory fallback. */
+    }
+    setUser(session);
+    return session;
+  }
   function logout() {
     try {
       sessionStorage.removeItem(KEY);
@@ -53,7 +73,7 @@ export function AuthProvider({ children }) {
     });
   }, []);
   return (
-    <AuthContext.Provider value={{ user, login, logout, saveProfile }}>
+    <AuthContext.Provider value={{ user, login, completeGoogleLogin, logout, saveProfile }}>
       {children}
     </AuthContext.Provider>
   );

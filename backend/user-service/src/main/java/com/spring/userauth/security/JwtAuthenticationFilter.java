@@ -1,114 +1,60 @@
 package com.spring.userauth.security;
 
 import java.io.IOException;
-
+import java.util.List;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import com.spring.userauth.service.JwtService;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-import java.util.List;
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
+import com.spring.userauth.repository.UserRepository;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 
 @Component
-public class JwtAuthenticationFilter
-        extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private final JwtService jwt;
+    private final UserDetailsService users;
+    private final UserRepository accounts;
 
-    private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
-
-    public JwtAuthenticationFilter(
-            JwtService jwtService,
-            UserDetailsService userDetailsService) {
-
-        this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
+    public JwtAuthenticationFilter(JwtService jwt, UserDetailsService users, UserRepository accounts) {
+        this.jwt = jwt;
+        this.users = users;
+        this.accounts = accounts;
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
-	
-        String authHeader =
-                request.getHeader("Authorization");
-
-        if (authHeader == null ||
-            !authHeader.startsWith("Bearer ")) {
-
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String token =
-                authHeader.substring(7);
-
-        String email;
-
-        try {
-            email = jwtService.extractEmail(token);
-        } catch (Exception e) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if (email != null &&
-            SecurityContextHolder
-                .getContext()
-                .getAuthentication() == null) {
-
-            UserDetails userDetails =
-                    userDetailsService
-                            .loadUserByUsername(email);
-
-            if (jwtService.isTokenValid(
-                    token,
-                    userDetails)) {
-            	
-            	    
-            	Claims claims = jwtService.extractAllClaims(token);
-
-            	List<String> roles = claims.get("roles", List.class);
-
-            	List<GrantedAuthority> authorities = roles.stream()
-            	        .map(role -> new SimpleGrantedAuthority(role))
-            	        .map(authority -> (GrantedAuthority) authority)
-            	        .toList();
-
-            	UsernamePasswordAuthenticationToken authentication =
-            	        new UsernamePasswordAuthenticationToken(
-            	                userDetails,
-            	                null,
-            	                authorities
-            	        );
-
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
-                );
-
-                SecurityContextHolder
-                        .getContext()
-                        .setAuthentication(authentication);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
+        String header = request.getHeader("Authorization");
+        if (header != null) {
+            try {
+                if (!header.startsWith("Bearer ")) throw new IllegalArgumentException("Bearer token required");
+                Claims claims = jwt.extractAllClaims(header.substring(7));
+                var account = accounts.findById(claims.get("userId", Long.class))
+                        .orElseThrow(() -> new UsernameNotFoundException("Account no longer exists"));
+                if (!account.getEmail().equals(claims.getSubject())) {
+                    throw new IllegalArgumentException("Application identity no longer matches");
+                }
+                UserDetails user = users.loadUserByUsername(claims.getSubject());
+                if (!user.isEnabled()) throw new IllegalArgumentException("Account disabled");
+                // Removed DB roles no longer authorize requests to user-service.
+                List<?> roles = (List<?>) claims.get("roles");
+                var authorities = user.getAuthorities().stream()
+                        .filter(authority -> roles.contains(authority.getAuthority())).toList();
+                SecurityContextHolder.getContext().setAuthentication(
+                        new UsernamePasswordAuthenticationToken(user, null, authorities));
+            } catch (JwtException | IllegalArgumentException | UsernameNotFoundException ex) {
+                SecurityContextHolder.clearContext();
+                response.setStatus(401);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"message\":\"Invalid or expired application token\"}");
+                return;
             }
         }
-
-        filterChain.doFilter(request, response);
+        chain.doFilter(request, response);
     }
 }

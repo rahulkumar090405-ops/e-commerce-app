@@ -1,40 +1,46 @@
-# everyday admin (`admin-web`)
+# everyday admin (admin-web)
 
-Standalone React + Vite admin application. Use Node.js 22 LTS or newer supported LTS and npm.
+React + Vite admin application at http://localhost:5173. Use a supported
+Node.js LTS release and npm.
 
-## Run
+## Run locally
 
-```sh
-npm install
-cp .env.example .env
-npm run dev
+From this directory:
+
+```powershell
+npm.cmd install
+# Copy if you do not already have .env.local.
+Copy-Item .env.example .env.local
+npm.cmd run dev
 ```
 
-On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp` if needed. Open http://localhost:5173. In PowerShell environments that block npm scripts, use `npm.cmd`.
+The admin login uses email/password through user-service and requires an enabled
+administrator account with the `ROLE_ADMIN` role. Google sign-in is not offered
+in the admin frontend. Backend authorization remains mandatory.
 
-`npm run build` generates `dist/`; `npm run preview` serves the production build on port 4173.
+Service URLs are configurable with `VITE_USER_SERVICE_URL`,
+`VITE_PRODUCT_SERVICE_URL`, and `VITE_ORDER_SERVICE_URL`. The defaults are
+user-service on 8081, product-service on 8082, and order-service on 8083.
+These frontend values are public and must not contain secrets.
 
-## Included
+## Screens
 
-- `/login`: demo login with native email validation and minimum 6-character password.
-- `/dashboard`: route guarded by a demo session, statistics, recent orders, service configuration, and sign out.
-- `/orders`: separate order list with customer/order search and status filters.
-- `/products`: separate product list with SKU/name search, category filters, prices, and stock.
-- `/categories`: separate category list with search, descriptions, and product counts.
-- All admin list routes require the same demo session as the dashboard. Data is read-only and mocked; replace `src/data/catalog.js` and `src/data/dashboard.js` when integrating your services.
-- Responsive layout. Login persists for the current browser tab using sessionStorage; passwords are never stored.
+- `/login` — email/password admin login.
+- `/register` — request administrator access.
+- `/dashboard` — sample dashboard and configured service URLs.
+- `/orders`, `/products`, `/categories` — sample catalog and order lists.
+- `/users`, `/profile` — user-service account management and profile.
 
-## Connect your microservices
+Dashboard and list data may still be mocked; service cards show configured
+URLs, not live health checks.
 
-Set the three `VITE_*_SERVICE_URL` values in `.env`, then restart Vite. Defaults are user-service on 8081, order-service on 8082, and product-service on 8083. These ports are placeholders, not an assumed backend contract.
+## Verification and build
 
-- `src/config/services.js`: service base URLs.
-- `src/services/api.js`: optional JSON request helper, e.g. `apiRequest('product', '/your-products-endpoint')`.
-- `src/context/AuthContext.jsx`: replace demo login with user-service login, session restoration, role checking, and logout. The current form deliberately does not send credentials anywhere.
-- `src/data/dashboard.js`: replace static dashboard figures and recent orders with responses from your services.
+```powershell
+npm.cmd test
+npm.cmd run build
+```
 
-Demo authentication is only a UI placeholder. Enforce authentication and admin authorization on the backend; the client route guard is not access control. Choose the cookie/token approach appropriate to your services and configure CORS for this app's origin. No endpoint paths, token format, or role model have been assumed.
-
-All dashboard values are sample data. The service cards show configured URLs, not live health checks. Fonts are optional Google Fonts with local sans-serif fallbacks.
-
-For production hosting, serve `dist/` and configure your server to return `index.html` for app routes such as `/dashboard`. `VITE_*` variables are public and are embedded at build time; never put secrets in them.
+The build goes to `dist/`. `npm.cmd run preview` serves port 4173. Configure
+production service URLs and serve `index.html` as the fallback for frontend
+routes.

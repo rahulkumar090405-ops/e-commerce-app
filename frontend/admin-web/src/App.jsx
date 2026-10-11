@@ -14,6 +14,7 @@ import { OrderList, ProductList, CategoryList } from "./pages/Lists";
 import Users from "./pages/Users";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
+import UserAvatar from "./components/UserAvatar";
 import Register from "./pages/Register";
 
 function AdminLayout() {
@@ -58,7 +59,7 @@ function AdminLayout() {
           ))}
         </nav>
         <div className="sidebar-footer">
-          <span className="avatar">{user.email.charAt(0).toUpperCase()}</span>
+          <UserAvatar user={user} />
           <div className="account">
             <strong>Administrator</strong>
             <small title={user.email}>{user.email}</small>
@@ -78,7 +79,7 @@ function AdminLayout() {
           <span>
             Workspace <span className="muted">/ {pageTitle}</span>
           </span>
-          <span className="demo-pill">Demo workspace</span>
+          <span className="demo-pill">Admin workspace</span>
         </header>
         <Outlet />
       </div>

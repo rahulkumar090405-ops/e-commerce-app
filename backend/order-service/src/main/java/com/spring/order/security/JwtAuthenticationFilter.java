@@ -2,108 +2,42 @@ package com.spring.order.security;
 
 import java.io.IOException;
 import java.util.List;
-
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import io.jsonwebtoken.Claims;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import io.jsonwebtoken.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    private final JwtService jwtService;
-
-    public JwtAuthenticationFilter(JwtService jwtService) {
-        this.jwtService = jwtService;
-    }
+    private final JwtService jwt;
+    public JwtAuthenticationFilter(JwtService jwt) { this.jwt = jwt; }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
-
-        System.out.println("========== CUSTOM JWT FILTER ==========");
-        System.out.println("URL: " + request.getRequestURI());
-
-        String authHeader = request.getHeader("Authorization");
-
-        System.out.println("AUTH HEADER EXISTS: " + (authHeader != null));
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-
-            System.out.println("NO BEARER TOKEN");
-
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String token = authHeader.substring(7);
-
-        try {
-
-            System.out.println("TOKEN RECEIVED");
-
-            Claims claims = jwtService.extractAllClaims(token);
-
-            String email = claims.getSubject();
-
-            System.out.println("EMAIL: " + email);
-
-            List<String> roles =
-                    claims.get("roles", List.class);
-            
-            Long userId = claims.get("userId", Long.class);
-
-            System.out.println("ROLES: " + roles);
-
-            if (roles == null || roles.isEmpty()) {
-
-                System.out.println("NO ROLES FOUND IN JWT");
-
-            } else {
-
-                List<SimpleGrantedAuthority> authorities =
-                        roles.stream()
-                                .map(SimpleGrantedAuthority::new)
-                                .toList();
-
-                System.out.println(
-                        "AUTHORITIES: " + authorities);
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                email,
-                                null,
-                                authorities
-                        );
-
-                SecurityContextHolder
-                        .getContext()
-                        .setAuthentication(authentication);
-
-                System.out.println(
-                        "SECURITY CONTEXT: "
-                        + SecurityContextHolder
-                                .getContext()
-                                .getAuthentication());
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
+        String header = request.getHeader("Authorization");
+        if (header != null) {
+            try {
+                if (!header.startsWith("Bearer ")) throw new IllegalArgumentException("Bearer token required");
+                Claims claims = jwt.extractAllClaims(header.substring(7));
+                List<?> roles = (List<?>) claims.get("roles");
+                var authorities = roles.stream().map(role -> new SimpleGrantedAuthority((String) role)).toList();
+                var authentication = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
+                // Trusted, signed ID for ownership checks; never taken from a request body.
+                authentication.setDetails(claims.get("userId", Long.class));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (JwtException | IllegalArgumentException ex) {
+                SecurityContextHolder.clearContext();
+                response.setStatus(401);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"message\":\"Invalid or expired application token\"}");
+                return;
             }
-
-        } catch (Exception e) {
-
-            System.out.println("========== JWT ERROR ==========");
-            e.printStackTrace();
-            System.out.println("==============================");
         }
-
-        filterChain.doFilter(request, response);
+        chain.doFilter(request, response);
     }
 }

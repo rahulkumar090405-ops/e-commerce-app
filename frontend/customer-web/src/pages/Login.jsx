@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getGoogleCustomerLoginUrl } from "../services/authApi";
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -41,6 +42,11 @@ export default function Login() {
         <p className="eyebrow">YOUR ACCOUNT</p>
         <h2>Welcome back.</h2>
         <p>Sign in and make yourself at home.</p>
+        <a className="google-login-button" href={getGoogleCustomerLoginUrl()}>
+          <span aria-hidden="true">G</span>
+          Continue with Google
+        </a>
+        <div className="login-divider"><span>or use email and password</span></div>
         <label htmlFor="email">Email address</label>
         <input
           id="email"

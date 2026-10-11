@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.spring.order.dto.OrderResponse;
@@ -27,8 +28,10 @@ public class OrderService {
 		this.productClient = productClient;
 	}
 
-	public Order createOrder(Long productId) {
+	public Order createOrder(Long productId, Authentication authentication) {
 		Order order =  new Order();
+		order.setUserId(authenticatedUserId(authentication));
+		order.setQuantity(BigDecimal.ONE);
 		if(productId != null)
 		{
 			ProductResponse productResponse = productClient.getProductById(productId);
@@ -55,9 +58,20 @@ public class OrderService {
 	}
 
 	public List<Order> getOrdersByUserId(Long userId, Authentication authentication) {
-		// TODO Auto-generated method stub
+		boolean admin = authentication.getAuthorities().stream()
+				.anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+		if (!admin && !userId.equals(authenticatedUserId(authentication))) {
+			throw new AccessDeniedException("You can only read your own orders");
+		}
 
 		return orderRepository.findByUserId(userId);
+	}
+
+	private Long authenticatedUserId(Authentication authentication) {
+		if (!(authentication.getDetails() instanceof Long id)) {
+			throw new AccessDeniedException("Application user identity is required");
+		}
+		return id;
 	}
 
 	public List<OrderResponse> getAllOrders() {

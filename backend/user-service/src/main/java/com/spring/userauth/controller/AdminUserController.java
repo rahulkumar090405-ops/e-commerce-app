@@ -21,7 +21,7 @@ public class AdminUserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'EMPLOYEE')")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserProfileResponse> getAllUsers() {
         return userService.getAllProfiles();
     }

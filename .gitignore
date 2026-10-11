@@ -23,3 +23,9 @@
 hs_err_pid*
 replay_pid*
 /.metadata/
+/.build-cache/
+**/target/
+**/node_modules/
+**/dist/
+**/.env
+**/.env.local

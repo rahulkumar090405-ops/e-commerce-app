@@ -1,86 +1,60 @@
 package com.spring.userauth.service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
-
 import javax.crypto.SecretKey;
-
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
 import com.spring.userauth.entity.User;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
-	
-	private final SecretKey secretKey;
-	private final long expiration;
-	
-    public JwtService(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration}") long expiration) {
+    private final SecretKey key;
+    private final long expiration;
+    private final String issuer;
 
-        this.secretKey = Keys.hmacShaKeyFor(
-                secret.getBytes()
-        );
-
+    public JwtService(@Value("${jwt.secret}") String secret,
+                      @Value("${jwt.expiration}") long expiration,
+                      @Value("${jwt.issuer}") String issuer) {
+        key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expiration = expiration;
+        this.issuer = issuer;
     }
 
     public String generateToken(User user) {
-
-        List<String> roles = user.getRoles()
-                .stream()
-                .map(role -> role.getName().name())
-                .toList();
-
-        return Jwts.builder()
-                .subject(user.getEmail())
+        if (!user.isEnabled()) throw new IllegalArgumentException("Account is disabled");
+        return Jwts.builder().issuer(issuer).subject(user.getEmail())
+                .audience().add(List.of("user-service", "product-service", "order-service")).and()
                 .claim("userId", user.getId())
-                .claim("roles", roles)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-                .signWith(secretKey)
-                .compact();
+                .claim("roles", user.getRoles().stream().map(role -> role.getName().name()).toList())
+                .issuedAt(new Date()).expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(key, Jwts.SIG.HS256).compact();
     }
-    
-    public String extractEmail(String token)
-    {
-    	return extractAllClaims(token)
-                .getSubject();
 
-    }
     public Claims extractAllClaims(String token) {
-
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-    
-    public boolean isTokenValid(
-            String token,
-            UserDetails userDetails) {
-
-        String email = extractEmail(token);
-
-        return email.equals(userDetails.getUsername())
-                && !isTokenExpired(token);
+        var signed = Jwts.parser().verifyWith(key).requireIssuer(issuer)
+                .requireAudience("user-service")
+                .build().parseSignedClaims(token);
+        if (!"HS256".equals(signed.getHeader().getAlgorithm())) {
+            throw new UnsupportedJwtException("Only HS256 application tokens are accepted");
+        }
+        Claims claims = signed.getPayload();
+        if (claims.getExpiration() == null || claims.getSubject() == null
+                || claims.getSubject().isBlank() || claims.get("userId", Long.class) == null
+                || !(claims.get("roles") instanceof List<?> roles)
+                || roles.stream().anyMatch(role -> !(role instanceof String name) || !name.startsWith("ROLE_"))) {
+            throw new MalformedJwtException("Required application claims are missing or invalid");
+        }
+        return claims;
     }
 
-    private boolean isTokenExpired(String token) {
+    public String extractEmail(String token) { return extractAllClaims(token).getSubject(); }
 
-        return extractAllClaims(token)
-                .getExpiration()
-                .before(new Date());
+    public boolean isTokenValid(String token, UserDetails user) {
+        return user.isEnabled() && user.getUsername().equals(extractEmail(token));
     }
-
-
 }

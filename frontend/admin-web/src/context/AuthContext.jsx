@@ -1,110 +1,117 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { getCurrentUser, loginUser, logoutUser } from "../services/authApi";
-import {
-  clearSessionAuth,
-  getSessionToken,
-  getSessionUser,
-  saveSessionToken,
-  saveSessionUser,
-} from "../services/api";
+import { getCurrentUser, loginUser, logoutUser } from "../services/authApi.js";
+import { clearSessionAuth, getSessionToken, onAuthCleared, saveSessionToken, saveSessionUser } from "../services/api.js";
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
-function getUserFromResponse(response) {
-  const data = response?.data ?? response;
-  if (data?.user) return data.user;
-  if (!data || typeof data !== "object" || Array.isArray(data)) return null;
-  return data.id || data.email || data.username || data.role || data.roles ? data : null;
-}
-
-function getTokenFromResponse(response) {
-  const data = response?.data ?? response;
-  return data?.token || data?.accessToken || response?.token || response?.accessToken || null;
-}
-
-function getTokenClaims(token) {
+function getTokenExpiration(token) {
   try {
     const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    const paddedPayload = payload.padEnd(Math.ceil(payload.length / 4) * 4, "=");
-    return JSON.parse(atob(paddedPayload));
-  } catch {
-    return {};
+    const claims = JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, "=")));
+    if (!Number.isFinite(claims.exp) || claims.exp * 1000 <= Date.now()) {
+      throw new Error("Your login has expired.");
+    }
+    return claims.exp * 1000;
+  } catch (error) {
+    if (error.message === "Your login has expired.") throw error;
+    throw new Error("The saved admin session is invalid.");
   }
-}
-
-function createSessionUser(response, token, email) {
-  const responseUser = getUserFromResponse(response);
-  const claims = getTokenClaims(token);
-  const user = responseUser && typeof responseUser === "object" && !Array.isArray(responseUser)
-    ? responseUser
-    : claims;
-
-  return {
-    ...user,
-    email: user?.email || user?.username || user?.sub || email,
-  };
 }
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionError, setSessionError] = useState("");
+  const [expiresAt, setExpiresAt] = useState(null);
 
+  useEffect(() => onAuthCleared(() => {
+    setUser(null);
+    setExpiresAt(null);
+    setIsLoading(false);
+  }), []);
   useEffect(() => {
-    if (!getSessionToken()) {
-      setIsLoading(false);
-      return;
+    let cancelled = false;
+    const token = getSessionToken();
+
+    async function restoreSession() {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const tokenExpiry = getTokenExpiration(token);
+        const profile = await getCurrentUser();
+        if (!profile?.roles?.includes("ROLE_ADMIN")) {
+          throw new Error("Administrator access is required.");
+        }
+        if (cancelled) return;
+        setExpiresAt(tokenExpiry);
+        setUser(profile);
+        saveSessionUser(profile);
+      } catch (error) {
+        if (cancelled) return;
+        if (error.status === 401 || error.status === 403
+          || error.message === "Administrator access is required."
+          || error.message === "The saved admin session is invalid."
+          || error.message === "Your login has expired.") {
+          clearSessionAuth();
+        } else {
+          setSessionError("Your admin session could not be verified. Check that user-service is running, then reload.");
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     }
 
-    const storedUser = getSessionUser();
-    if (storedUser) setUser(storedUser);
+    restoreSession();
+    return () => { cancelled = true; };
+  }, []);
+  useEffect(() => {
+    if (!expiresAt) return;
+    const timeout = window.setTimeout(clearSessionAuth, Math.max(0, expiresAt - Date.now()));
+    return () => window.clearTimeout(timeout);
+  }, [expiresAt]);
 
-    getCurrentUser()
-      .then(response => {
-        const currentUser = getUserFromResponse(response);
-        if (currentUser && typeof currentUser === "object") {
-          setUser(currentUser);
-          saveSessionUser(currentUser);
-        }
-      })
-      .catch(error => {
-        if (error.status === 401) {
-          clearSessionAuth();
-          setUser(null);
-        }
-      })
-      .finally(() => setIsLoading(false));
+  const acceptToken = useCallback(async (response) => {
+    const token = response?.token;
+    if (!token) throw new Error("user-service did not return an application token.");
+    try {
+      const tokenExpiry = getTokenExpiration(token);
+      saveSessionToken(token);
+      // The backend validates the bearer token and returns current database roles.
+      const profile = await getCurrentUser();
+      if (!profile?.roles?.includes("ROLE_ADMIN")) throw new Error("Administrator access is required.");
+      setExpiresAt(tokenExpiry);
+      setUser(profile);
+      saveSessionUser(profile);
+      return { user: profile, response };
+    } catch (error) {
+      clearSessionAuth();
+      throw error;
+    }
   }, []);
 
-  async function login(email, password) {
-    const response = await loginUser(email, password);
-    const token = getTokenFromResponse(response);
-    if (!token) {
-      throw new Error("Login succeeded, but user-service did not return a token.");
-    }
-
-    saveSessionToken(token);
-    const currentUser = createSessionUser(response, token, email);
-    setUser(currentUser);
-    saveSessionUser(currentUser);
-    return { user: currentUser, response };
-  }
+  const login = useCallback(async (email, password) => {
+    setSessionError("");
+    clearSessionAuth();
+    return acceptToken(await loginUser(email, password));
+  }, [acceptToken]);
 
   async function logout() {
-    try { await logoutUser(); } catch { /* Clear the local UI even if the network call fails. */ }
+    if (!getSessionToken()) { clearSessionAuth(); return; }
+    try { if (getSessionToken()) await logoutUser(); } catch { /* Drop local credentials even offline. */ }
     clearSessionAuth();
-    setUser(null);
   }
 
-  const saveCurrentUser = useCallback((currentUser) => {
-    setUser(currentUser);
-    saveSessionUser(currentUser);
+  const saveCurrentUser = useCallback((profile) => {
+    setUser(profile);
+    saveSessionUser(profile);
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, saveCurrentUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, isLoading, sessionError, login, logout, saveCurrentUser }}>
+    {children}
+  </AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);

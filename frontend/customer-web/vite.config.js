@@ -15,6 +15,14 @@ export default defineConfig(({ mode }) => {
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/user-service/, ""),
       },
+      "/oauth2": {
+        target: env.VITE_USER_SERVICE_URL || "http://localhost:8081",
+        changeOrigin: true,
+      },
+      "/login/oauth2": {
+        target: env.VITE_USER_SERVICE_URL || "http://localhost:8081",
+        changeOrigin: true,
+      },
     },
   },
   preview: { port: 4174, strictPort: true },

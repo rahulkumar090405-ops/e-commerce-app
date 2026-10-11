@@ -32,7 +32,7 @@ export default function Register() {
         email: form.get("email").trim(),
         password,
       });
-      setMessage("Your administrator account has been created. You can now sign in.");
+      setMessage("Your account has been created. A trusted administrator must grant ADMIN access before you can sign in here.");
       formElement.reset();
       window.setTimeout(() => navigate("/login"), 1600);
     } catch (requestError) {

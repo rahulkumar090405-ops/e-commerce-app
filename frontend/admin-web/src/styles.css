@@ -484,6 +484,30 @@ footer {
   font-size: 13px;
   outline-color: #2c6653;
 }
+.login-callback {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+.login-callback-card {
+  width: min(100%, 420px);
+  padding: 36px;
+  border: 1px solid #e5ebe7;
+  border-radius: 10px;
+  background: #fff;
+}
+.login-callback-card h1 { margin-bottom: 14px; font-size: 26px; }
+.login-callback-card .form-error { line-height: 1.7; }
+.callback-link {
+  display: inline-block;
+  margin-top: 18px;
+  color: #204e3e;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-row .login-form label { margin-top: 25px; }
 .role-list { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -511,6 +535,9 @@ footer {
 .primary:hover {
   background: #123c2d;
 }
+.login-form .primary:disabled { cursor: wait; opacity: 0.65; }
+.avatar img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.account strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .demo-note {
   font-size: 11px;
   line-height: 1.8;

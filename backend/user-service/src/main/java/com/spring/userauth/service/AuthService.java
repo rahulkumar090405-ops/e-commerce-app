@@ -31,9 +31,7 @@ import com.spring.userauth.repository.UserRepository;
 public class AuthService {
 
 	private static final Set<RoleName> ADMIN_WORKSPACE_ROLES = Set.of(
-			RoleName.ROLE_ADMIN,
-			RoleName.ROLE_USER,
-			RoleName.ROLE_EMPLOYEE);
+			RoleName.ROLE_ADMIN);
 
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
@@ -103,6 +101,10 @@ public class AuthService {
 	        .orElseThrow(() ->
 	            new UserNotFoundException("User not found"));
 
+	    if (!user.isEnabled()) {
+	        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is disabled");
+	    }
+
 	    try {
 	        authenticationManager.authenticate(
 	            new UsernamePasswordAuthenticationToken(
@@ -126,9 +128,5 @@ public class AuthService {
 	    return new AuthResponse(token);
 	}
 
-	public AuthResponse logout(LoginRequest loginRequest) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 }

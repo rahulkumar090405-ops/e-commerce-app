@@ -19,7 +19,7 @@ public class UserController {
 		this.userService = userService;
 	}
 
-	@PreAuthorize("hasAnyRole('ADMIN', 'USER', 'EMPLOYEE')")
+	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/count")
 	public Map<String,Long> getUserCount()
 	{
