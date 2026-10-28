@@ -1,72 +1,53 @@
 package com.spring.order.security;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import java.util.List;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.*;
+import org.springframework.http.*;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
+import org.springframework.security.web.*;
+import org.springframework.security.web.authentication.*;
+import org.springframework.security.web.context.NullSecurityContextRepository;
+import org.springframework.web.cors.*;
 
 @Configuration
-@EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+    @Bean
+    SecurityFilterChain apiChain(HttpSecurity http, JwtAuthenticationFilter jwt) throws Exception {
+        http.csrf(csrf -> csrf.disable()).cors(cors -> {})
+                .requestCache(cache -> cache.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .securityContext(context -> context.securityContextRepository(new NullSecurityContextRepository()))
+                .exceptionHandling(errors -> errors
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                        .accessDeniedHandler((req, res, ex) -> res.setStatus(403)))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*").hasAnyRole("ADMIN", "USER", "CUSTOMER")
+                        .requestMatchers("/api/orders", "/api/orders/*").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
 
-	private final JwtAuthenticationFilter jwtAuthenticationFilter;
-	private final CustomAccessDeniedHandler accessDeniedHandler;
-	
-	public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, CustomAccessDeniedHandler accessDeniedHandler)
-	{
-		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-		this.accessDeniedHandler = accessDeniedHandler;
-		
-	}
+    @Bean
+    FilterRegistrationBean<JwtAuthenticationFilter> jwtRegistration(JwtAuthenticationFilter filter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
 
-	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http)
-			throws Exception {
-
-		http
-		.csrf(csrf -> csrf.disable())
-		.sessionManagement(session ->
-		session.sessionCreationPolicy(
-				SessionCreationPolicy.STATELESS
-				)
-				)
-		.exceptionHandling(exception ->
-        exception.accessDeniedHandler(accessDeniedHandler)
-)
-		.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/swagger-ui/**").permitAll()
-				.requestMatchers("/v3/api-docs/**").permitAll()
-				 .requestMatchers("/actuator/health").permitAll()
-				 .requestMatchers("/debug/test-auth").permitAll()
-				.requestMatchers("/orders/**")
-				.authenticated()
-
-				.anyRequest()
-				.authenticated()
-				)
-		.addFilterBefore(
-                jwtAuthenticationFilter,
-                UsernamePasswordAuthenticationFilter.class
-            );	
-		return http.build();
-	}
-
-	/*
-	 * @Bean public JwtDecoder jwtDecoder(
-	 * 
-	 * @Value("${jwt.secret}") String secret) {
-	 * 
-	 * SecretKey key = new SecretKeySpec( secret.getBytes(StandardCharsets.UTF_8),
-	 * "HmacSHA384" );
-	 * 
-	 * return NimbusJwtDecoder .withSecretKey(key) .macAlgorithm(MacAlgorithm.HS384)
-	 * .build(); }
-	 */
-
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration cors = new CorsConfiguration();
+        cors.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174"));
+        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        cors.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        cors.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cors);
+        return source;
+    }
 }

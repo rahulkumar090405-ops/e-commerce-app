@@ -5,11 +5,10 @@ import java.io.Serializable;
 import com.spring.userauth.utills.BaseEntity;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
-@Entity
-@Table(name = "user_roles")
+// Legacy DTO only: User.roles owns user_roles as a many-to-many join table.
+// Mapping this table a second time as an entity adds mandatory BaseEntity
+// columns that Hibernate cannot populate when inserting role memberships.
 public class UserRole extends BaseEntity implements Serializable {
     /**
 	 * 

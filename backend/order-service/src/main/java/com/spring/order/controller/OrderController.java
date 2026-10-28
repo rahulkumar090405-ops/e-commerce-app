@@ -21,7 +21,7 @@ import com.spring.order.entity.Order;
 import com.spring.order.service.OrderService;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/api/orders")
 public class OrderController {
 
     private final OrderService orderService;
@@ -34,9 +34,9 @@ public class OrderController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'CUSTOMER')")
     @PostMapping("/{productId}")
     public ResponseEntity<CreateOrderResponse> createOrder(
-            @PathVariable Long productId) {
+            @PathVariable Long productId, Authentication authentication) {
 
-        Order order = orderService.createOrder(productId);
+        Order order = orderService.createOrder(productId, authentication);
 
         return ResponseEntity.ok(
                 new CreateOrderResponse(
@@ -57,7 +57,7 @@ public class OrderController {
     }
 
     // USER + ADMIN
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public Order getOrderDetail(
             @PathVariable Long id) {
@@ -66,7 +66,7 @@ public class OrderController {
     }
 
     // USER + ADMIN
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public List<OrderResponse> getOrdersAll() {
 
@@ -92,15 +92,4 @@ public class OrderController {
         orderService.deleteOrder(id);
     }
     
-    @GetMapping("/debug/test-auth")
-    public String testAuth(Authentication authentication) {
-
-        System.out.println("=================================");
-        System.out.println("AUTH OBJECT: " + authentication);
-        System.out.println("USERNAME: " + authentication.getName());
-        System.out.println("AUTHORITIES: " + authentication.getAuthorities());
-        System.out.println("=================================");
-
-        return "Authentication working";
-    }
 }

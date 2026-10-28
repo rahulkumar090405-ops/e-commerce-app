@@ -1,14 +1,30 @@
+import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getGoogleCustomerLoginUrl } from "../services/authApi";
 
 export default function Login() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   if (user) return <Navigate to="/" replace />;
-  function submit(event) {
+  
+  async function submit(event) {
     event.preventDefault();
-    login(new FormData(event.currentTarget).get("email").trim());
-    navigate("/", { replace: true });
+    const data = new FormData(event.currentTarget);
+    const email = data.get("email").trim();
+    const password = data.get("password");
+    setError("");
+    setSubmitting(true);
+    try {
+       await login(email, password);
+      navigate("/", { replace: true });
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setSubmitting(false);
+    }
   }
   return (
     <main className="login-page">
@@ -26,6 +42,11 @@ export default function Login() {
         <p className="eyebrow">YOUR ACCOUNT</p>
         <h2>Welcome back.</h2>
         <p>Sign in and make yourself at home.</p>
+        <a className="google-login-button" href={getGoogleCustomerLoginUrl()}>
+          <span aria-hidden="true">G</span>
+          Continue with Google
+        </a>
+        <div className="login-divider"><span>or use email and password</span></div>
         <label htmlFor="email">Email address</label>
         <input
           id="email"
@@ -45,13 +66,11 @@ export default function Login() {
           required
           minLength={6}
         />
-        <button type="submit" className="primary">
+        <button type="submit" className="primary" disabled={submitting}>
           Sign in <span>→</span>
         </button>
-        <p className="demo-note">
-          Demo login: use any valid email and a password of at least 6
-          characters. User-service integration is pending.
-        </p>
+        {error && <p role="alert">{error}</p>}
+        <p className="auth-link">New here? <Link to="/register">Create an account</Link></p>
         <Link className="continue-link" to="/">
           ← Back to the shop
         </Link>

@@ -22,7 +22,7 @@ import com.spring.product.repository.ProductRepository;
 import com.spring.product.service.ProductService;
 
 @Controller
-@RequestMapping("demo/products")
+@RequestMapping("/api/demo/products")
 public class ProductControllerDemo {
 
 	private static ProductRepository productRepository;

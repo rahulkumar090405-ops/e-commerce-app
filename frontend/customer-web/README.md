@@ -19,7 +19,7 @@ On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp` if need
 - `/`: six mock products, search, category filtering, and add-to-bag controls.
 - `/products`: a separate full product-list page, accessible from the header and the homepage collection button. It shares the catalog, search, category filters, and cart with the homepage via `src/components/ProductCatalog.jsx`.
 - `/cart`: quantity changes, remove items, subtotal, empty state, and persistence in localStorage.
-- `/login`: demo login; use any valid email and any password of at least 6 characters. Sign out is available in the header.
+- `/login`: email/password login and Google customer sign-in. Google sign-in creates a customer account on first use when Google reports a verified email. If that email already belongs to another account, the login is denied rather than linking accounts automatically.
 - Responsive desktop/mobile layouts, labeled controls, keyboard focus styles, and add-to-cart announcements.
 
 The demo cart is local to the browser and shared between demo logins in that browser. Each product allows up to 99 units. The demo catalog uses USD. Checkout is intentionally disabled until order-service integration; no payment or order is created. Emoji illustrations work without external product-image hosting. Fonts use optional Google Fonts with local sans-serif fallbacks.
@@ -35,6 +35,8 @@ Edit `.env` and restart Vite. Defaults: user-service on 8081, order-service on 8
 - `src/context/AuthContext.jsx` and `src/pages/Login.jsx`: wire user-service authentication and session restoration. The current form does not send credentials; passwords are never stored.
 - `src/pages/Cart.jsx`: enable checkout and call order-service once your request contract and authentication are implemented. Shipping and taxes are intentionally uncalculated.
 
-Choose your cookie/token approach and configure service CORS for this app's origin. Backend integration, real authentication, registration, order placement, and payments are left to you. No backend endpoint paths or auth contract have been assumed.
+Configure Google OAuth client credentials in the user-service environment and register `http://localhost:8081/login/oauth2/code/google` as an authorized redirect URI. The frontend completes the short-lived backend OAuth session at `/auth/callback`; the backend then issues its application JWT. Customer sign-in requires a verified Google email and creates only the `ROLE_CUSTOMER` role. An existing account with the same email is not linked automatically.
+
+For email/password login and API access, configure service CORS for this app's origin. Registration, order placement, and payments are not a complete production flow.
 
 Serve `dist/` in production and configure an SPA fallback to `index.html` for `/cart`, `/login`, and other routes. `VITE_*` variables are public and embedded at build time; never include secrets.

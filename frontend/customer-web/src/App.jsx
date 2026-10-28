@@ -4,6 +4,9 @@ import Shop from "./pages/Shop";
 import Products from "./pages/Products";
 import Cart from "./pages/Cart";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Profile from "./pages/Profile";
+import AuthCallback from "./pages/AuthCallback";
 
 export default function App() {
   return (
@@ -13,6 +16,9 @@ export default function App() {
         <Route path="products" element={<Products />} />
         <Route path="cart" element={<Cart />} />
         <Route path="login" element={<Login />} />
+        <Route path="auth/callback" element={<AuthCallback />} />
+        <Route path="register" element={<Register />} />
+        <Route path="profile" element={<Profile />} />
         <Route
           path="*"
           element={

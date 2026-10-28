@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f3">
+  <meta name="description" content="Interactive interview guide to the Google OAuth 2.0 and OpenID Connect customer sign-in flow in this e-commerce project.">
+  <title>Google Sign-In · OAuth 2.0 Learning Lab</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17372c;
+      --muted: #65766e;
+      --green: #236449;
+      --green-dark: #174934;
+      --lime: #dcef9e;
+      --paper: #f5f7f3;
+      --white: #fff;
+      --line: #dce5dd;
+      --blue: #dceaf7;
+      --lavender: #ece6f7;
+      --amber: #fff0d0;
+      --shadow: 0 22px 55px rgb(29 62 45 / 9%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); line-height: 1.6; }
+    a { color: var(--green-dark); }
+    button { font: inherit; }
+    .shell { width: min(1120px, calc(100% - 36px)); margin-inline: auto; }
+    .topbar { padding: 22px 0; }
+    .topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .brand { color: var(--ink); font-size: 14px; font-weight: 800; letter-spacing: -.03em; text-decoration: none; }
+    .brand span { color: var(--green); }
+    .top-link { color: var(--muted); font-size: 13px; text-decoration: none; }
+    .top-link:hover, .source-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .hero { position: relative; overflow: hidden; padding: clamp(34px, 7vw, 76px); border-radius: 28px; background: var(--green-dark); color: white; box-shadow: var(--shadow); }
+    .hero::after { position: absolute; top: -140px; right: -100px; width: 420px; height: 420px; border: 1px solid rgb(255 255 255 / 13%); border-radius: 50%; content: ""; box-shadow: 0 0 0 46px rgb(255 255 255 / 3%), 0 0 0 92px rgb(255 255 255 / 3%); pointer-events: none; }
+    .eyebrow { margin: 0 0 12px; color: #bfe594; font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 760px; margin-bottom: 18px; font-size: clamp(36px, 7vw, 68px); font-weight: 650; letter-spacing: -.065em; line-height: 1.04; }
+    .hero-copy { max-width: 660px; margin-bottom: 27px; color: #dce9df; font-size: clamp(15px, 2.2vw, 18px); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 10px 17px; border: 1px solid transparent; border-radius: 9px; background: var(--lime); color: var(--ink); font-size: 13px; font-weight: 750; text-decoration: none; cursor: pointer; transition: transform .16s ease, background .16s ease; }
+    .button:hover { transform: translateY(-1px); background: #e8f6be; }
+    .button.secondary { border-color: rgb(255 255 255 / 30%); background: transparent; color: white; }
+    .button.secondary:hover { background: rgb(255 255 255 / 8%); }
+    main { padding-bottom: 70px; }
+    section { margin-top: 54px; scroll-margin-top: 18px; }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+    .section-heading .eyebrow { margin-bottom: 5px; color: var(--green); }
+    h2 { margin-bottom: 0; font-size: clamp(24px, 4vw, 34px); letter-spacing: -.045em; line-height: 1.15; }
+    .section-intro { max-width: 670px; margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; color: var(--muted); font-size: 11px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .dot.browser { background: #dcef9e; }
+    .dot.backend { background: #b7d5ef; }
+    .dot.provider { background: #d8c7ef; }
+    .dot.data { background: #ffd985; }
+    .diagram-frame { overflow-x: auto; padding: 18px; border: 1px solid var(--line); border-radius: 17px; background: var(--white); box-shadow: 0 8px 26px rgb(29 62 45 / 4%); }
+    .diagram { display: grid; min-width: 760px; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+    .lane { display: grid; align-content: start; gap: 10px; }
+    .lane-title { display: flex; min-height: 34px; align-items: center; gap: 8px; padding: 0 10px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .node { position: relative; min-height: 82px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 11px; background: #fbfcfa; cursor: pointer; transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+    .node:hover { transform: translateY(-2px); border-color: #9eb8a5; }
+    .node[aria-pressed="true"] { border-color: var(--green); box-shadow: 0 0 0 3px rgb(35 100 73 / 12%); }
+    .node[data-kind="browser"] { background: #f2f8e5; }
+    .node[data-kind="backend"] { background: #edf5fb; }
+    .node[data-kind="provider"] { background: #f5f0fb; }
+    .node[data-kind="data"] { background: #fff8e9; }
+    .node strong { display: block; margin-bottom: 3px; font-size: 12px; }
+    .node small { display: block; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .node .step-no { display: inline-grid; width: 17px; height: 17px; place-items: center; margin-right: 4px; border-radius: 50%; background: var(--green-dark); color: white; font-size: 9px; }
+    .flow-arrow { display: flex; min-height: 20px; align-items: center; justify-content: center; color: #9aac9f; font-size: 17px; line-height: 1; }
+    .diagram-caption { margin: 12px 3px 0; color: var(--muted); font-size: 11px; }
+    .lesson { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(240px, .8fr); gap: 16px; margin-top: 16px; }
+    .lesson-card, .quote-card, .concept-card, .interview-card, .takeaway, .code-card { border: 1px solid var(--line); border-radius: 15px; background: var(--white); }
+    .lesson-card { min-height: 210px; padding: 23px; }
+    .lesson-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; color: var(--muted); font-size: 11px; }
+    .lesson-meta span:first-child { color: var(--green); font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .lesson-card h3 { margin-bottom: 8px; font-size: 21px; letter-spacing: -.035em; }
+    .lesson-card p { max-width: 650px; margin-bottom: 0; color: #506158; font-size: 14px; }
+    .lesson-side { display: grid; gap: 10px; }
+    .quote-card { display: flex; align-items: center; padding: 17px; background: #f0f6e6; color: var(--green-dark); font-size: 13px; font-weight: 650; }
+    .lesson-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .lesson-controls .button { min-height: 39px; padding: 8px 13px; font-size: 12px; }
+    .lesson-controls .button:disabled { transform: none; background: #e9eeea; color: #8b9890; cursor: not-allowed; }
+    .step-dots { display: flex; justify-content: center; gap: 5px; }
+    .step-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 20px; background: #c9d4cb; cursor: pointer; }
+    .step-dot[aria-current="step"] { width: 22px; background: var(--green); }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+    .concept-card { padding: 20px; }
+    .concept-icon { display: grid; width: 37px; height: 37px; place-items: center; margin-bottom: 15px; border-radius: 10px; background: #eef5e5; color: var(--green-dark); font-size: 17px; font-weight: 800; }
+    .concept-card h3 { margin-bottom: 7px; font-size: 16px; letter-spacing: -.025em; }
+    .concept-card p { margin-bottom: 0; color: var(--muted); font-size: 12px; }
+    .token-table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); border-radius: 13px; overflow: hidden; background: var(--white); font-size: 12px; }
+    .token-table th, .token-table td { padding: 13px 15px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .token-table th { background: #edf3ed; color: var(--green-dark); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    .token-table tr:last-child td { border-bottom: 0; }
+    .token-table td:first-child { width: 20%; font-weight: 750; }
+    .token-table td:nth-child(2) { width: 38%; color: #53645a; }
+    .source-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .source-link { display: flex; min-width: 0; flex-direction: column; gap: 3px; padding: 13px 15px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); text-decoration: none; }
+    .source-link strong { font-size: 12px; }
+    .source-link code { overflow-wrap: anywhere; color: var(--muted); font-size: 10px; }
+    .qa-list { display: grid; gap: 9px; }
+    details { border: 1px solid var(--line); border-radius: 11px; background: var(--white); }
+    summary { padding: 14px 16px; font-size: 13px; font-weight: 750; cursor: pointer; }
+    details p { margin: 0; padding: 0 16px 15px; color: #53645a; font-size: 12px; }
+    .takeaway { padding: clamp(21px, 4vw, 32px); background: var(--green-dark); color: white; }
+    .takeaway .eyebrow { color: #bfe594; }
+    .takeaway blockquote { margin: 0; color: #f3f7f3; font-size: clamp(16px, 2.7vw, 22px); font-weight: 550; letter-spacing: -.02em; line-height: 1.55; }
+    .note { margin-top: 18px; padding: 14px 16px; border-left: 3px solid #d8a947; border-radius: 0 9px 9px 0; background: var(--amber); color: #614f2c; font-size: 12px; }
+    .footer { padding: 24px 0 34px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+    .footer-inner { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+    code { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 24px, 600px); }
+      .hero { border-radius: 20px; }
+      .section-heading { align-items: start; flex-direction: column; }
+      .lesson { grid-template-columns: 1fr; }
+      .lesson-side { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .source-grid { grid-template-columns: 1fr; }
+      .token-table th, .token-table td { padding: 10px 9px; }
+      .token-table { font-size: 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar shell">
+    <div class="topbar-inner">
+      <a class="brand" href="#top">EVERYDAY <span>· LEARNING LAB</span></a>
+      <a class="top-link" href="GOOGLE_OAUTH2_INTERVIEW_GUIDE.md">Read the full written guide ↗</a>
+    </div>
+  </header>
+
+  <main id="top" class="shell">
+    <section class="hero" aria-labelledby="page-title" style="margin-top: 0">
+      <p class="eyebrow">AUTHENTICATION · INTERVIEW STUDY</p>
+      <h1>Google sign-in,<br>from click to JWT.</h1>
+      <p class="hero-copy">An interactive walkthrough of the customer Google login in this project. Follow the browser redirects, understand each token, and practice explaining the security decisions.</p>
+      <div class="hero-actions">
+        <a class="button" href="#flow">Explore the flow ↓</a>
+        <a class="button secondary" href="#interview">Practice interview questions</a>
+      </div>
+    </section>
+
+    <section id="flow" aria-labelledby="flow-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">01 · THE SEQUENCE</p>
+          <h2 id="flow-title">One login, four participants</h2>
+          <p class="section-intro">Select any numbered step or use the controls to learn what each participant does. Arrows show the browser/server round trips.</p>
+        </div>
+        <div class="legend" aria-label="Diagram legend">
+          <span><i class="dot browser"></i>Browser</span><span><i class="dot backend"></i>Our backend</span><span><i class="dot provider"></i>Google</span><span><i class="dot data"></i>Local database</span>
+        </div>
+      </div>
+
+      <div class="diagram-frame" role="group" aria-label="Interactive Google sign-in sequence diagram">
+        <div class="diagram">
+          <div class="lane">
+            <div class="lane-title"><i class="dot browser"></i>Customer browser</div>
+            <button class="node" type="button" data-step="0" data-kind="browser" aria-pressed="true"><strong><i class="step-no">1</i>Start sign-in</strong><small>Click Google on :5174/login</small></button>
+            <div class="flow-arrow" aria-hidden="true">↓</div>
+            <button class="node" type="button" data-step="1" data-kind="backend" aria-pressed="false"><strong><i class="step-no">2</i>Backend starts</strong><small>GET /api/auth/google/customer/start</small></button>
+            <div class="flow-arrow" aria-hidden="true">↓</div>
+            <button class="node" type="button" data-step="2" data-kind="provider" aria-pressed="false"><strong><i class="step-no">3</i>Google authenticates</strong><small>Authorization Code + OIDC</small></button>
+            <div class="flow-arrow" aria-hidden="true">↓</div>
+            <button class="node" type="button" data-step="3" data-kind="backend" aria-pressed="false"><strong><i class="step-no">4</i>Backend callback</strong><small>:8081/login/oauth2/code/google</small></button>
+            <div class="flow-arrow" aria-hidden="true">↓</div>
+            <button class="node" type="button" data-step="4" data-kind="backend" aria-pressed="false"><strong><i class="step-no">5</i>Local identity check</strong><small>Verified issuer + subject</small></button>
+          </div>
+          <div class="lane">
+            <div class="lane-title"><i class="dot backend"></i>user-service :8081</div>
+            <div class="node" data-kind="backend"><strong>Creates short session</strong><small>Marks the intended audience: customer</small></div>
+            <div class="flow-arrow" aria-hidden="true">↓ redirect</div>
+            <div class="node" data-kind="backend"><strong>/oauth2/authorization/google</strong><small>Spring creates state and OIDC nonce</small></div>
+            <div class="flow-arrow" aria-hidden="true">↗ callback</div>
+            <div class="node" data-kind="backend"><strong>Exchanges the code</strong><small>Client secret stays on the server</small></div>
+            <div class="flow-arrow" aria-hidden="true">↓ lookup</div>
+            <div class="node" data-kind="backend"><strong>Creates/loads customer</strong><small>Only the local customer role grants access</small></div>
+          </div>
+          <div class="lane">
+            <div class="lane-title"><i class="dot provider"></i>Google</div>
+            <div class="node" data-kind="provider"><strong>Authorization request</strong><small>Browser is redirected to Google</small></div>
+            <div class="flow-arrow" aria-hidden="true">↔ HTTPS</div>
+            <div class="node" data-kind="provider"><strong>User consents / signs in</strong><small>Google authenticates the person</small></div>
+            <div class="flow-arrow" aria-hidden="true">↓ code + state</div>
+            <div class="node" data-kind="provider"><strong>Returns authorization code</strong><small>Code is short-lived and one-time</small></div>
+            <div class="flow-arrow" aria-hidden="true">↓ ID token</div>
+            <div class="node" data-kind="provider"><strong>OIDC identity</strong><small>Spring validates the provider response</small></div>
+          </div>
+          <div class="lane">
+            <div class="lane-title"><i class="dot data"></i>App + local DB</div>
+            <div class="node" data-kind="data"><strong>Fixed frontend callback</strong><small>:5174/auth/callback · no token in URL</small></div>
+            <div class="flow-arrow" aria-hidden="true">↓ GET CSRF</div>
+            <div class="node" data-kind="data"><strong>Session-bound CSRF token</strong><small>Browser sends session cookie + CSRF header</small></div>
+            <div class="flow-arrow" aria-hidden="true">↓ POST exchange</div>
+            <div class="node" data-kind="data"><strong>Issue app JWT</strong><small>Recheck user/role; consume OAuth session</small></div>
+            <div class="flow-arrow" aria-hidden="true">↓ Bearer</div>
+            <div class="node" data-kind="data"><strong>Our APIs</strong><small>Validate our JWT, not Google's token</small></div>
+          </div>
+        </div>
+        <p class="diagram-caption">Simplified sequence: callbacks and exchange requests travel through the browser. Google client credentials remain on the backend.</p>
+      </div>
+
+      <div class="lesson" aria-live="polite" aria-atomic="true">
+        <article class="lesson-card">
+          <div class="lesson-meta"><span id="lesson-label">Step 1 · Browser</span><span id="lesson-count">1 of 8</span></div>
+          <h3 id="lesson-title">The customer clicks “Continue with Google”</h3>
+          <p id="lesson-copy">The React login page navigates to user-service. It does not collect the Google password, and it never receives the OAuth client secret.</p>
+        </article>
+        <div class="lesson-side">
+          <div class="quote-card" id="lesson-question">Interview prompt: Why does the browser start at our backend?</div>
+          <div class="lesson-controls">
+            <button class="button" id="previous-step" type="button" disabled>← Previous</button>
+            <div class="step-dots" id="step-dots" aria-label="Choose a learning step"></div>
+            <button class="button" id="next-step" type="button">Next →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="concepts" aria-labelledby="concepts-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">02 · THE SECURITY IDEA</p><h2 id="concepts-title">Authenticate, identify, authorize</h2></div>
+      </div>
+      <div class="grid-3">
+        <article class="concept-card"><div class="concept-icon" aria-hidden="true">01</div><h3>Authenticate · Google</h3><p>Google proves that the person controls a Google identity. Spring's OIDC support validates the response.</p></article>
+        <article class="concept-card"><div class="concept-icon" aria-hidden="true">02</div><h3>Identify · Our database</h3><p>The app resolves the validated <code>(issuer, subject)</code> pair to a local user. Email alone does not silently link accounts.</p></article>
+        <article class="concept-card"><div class="concept-icon" aria-hidden="true">03</div><h3>Authorize · Our app</h3><p>Our database roles decide access. A new Google sign-in receives <code>ROLE_CUSTOMER</code>, never admin by identity alone.</p></article>
+      </div>
+      <div class="note"><strong>Important project detail:</strong> Google sign-in is on the customer storefront at <code>localhost:5174</code>. The admin login at <code>localhost:5173</code> is email/password.</div>
+    </section>
+
+    <section id="tokens" aria-labelledby="tokens-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">03 · DON'T MIX THESE UP</p><h2 id="tokens-title">Four values, four jobs</h2></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="token-table">
+          <thead><tr><th>Value</th><th>Purpose</th><th>In this project</th></tr></thead>
+          <tbody>
+            <tr><td>Authorization code</td><td>One-time handoff used to finish the OAuth authorization.</td><td>Google redirects it to the backend callback. Backend exchanges it with Google.</td></tr>
+            <tr><td>Google ID token</td><td>OIDC identity assertion for the OAuth client.</td><td>Spring validates it. Its issuer and subject identify the Google account.</td></tr>
+            <tr><td>Google access token</td><td>Grants access to Google APIs within granted scopes.</td><td>Not a credential for this project's product/order APIs.</td></tr>
+            <tr><td>Application JWT</td><td>Our signed credential for our own APIs.</td><td>User-service issues it after checking the local account and role.</td></tr>
+            <tr><td>CSRF token</td><td>Proves a cookie-authenticated state change came through the expected browser flow.</td><td>Sent in a header on the one-time session-to-JWT exchange POST.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="implementation" aria-labelledby="implementation-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">04 · FOLLOW THE CODE</p><h2 id="implementation-title">Where each step lives</h2><p class="section-intro">Open the source to connect the diagram to the implementation. Paths are relative to this HTML file.</p></div>
+      </div>
+      <div class="source-grid">
+        <a class="source-link" href="../frontend/customer-web/src/pages/Login.jsx"><strong>1. Login button</strong><code>customer-web/src/pages/Login.jsx</code></a>
+        <a class="source-link" href="../frontend/customer-web/src/pages/AuthCallback.jsx"><strong>2. Finish the redirect</strong><code>customer-web/src/pages/AuthCallback.jsx</code></a>
+        <a class="source-link" href="../frontend/customer-web/src/services/authApi.js"><strong>3. CSRF + token exchange</strong><code>customer-web/src/services/authApi.js</code></a>
+        <a class="source-link" href="../backend/user-service/src/main/java/com/spring/userauth/config/SecurityConfig.java"><strong>4. OAuth/API filter chains</strong><code>user-service/config/SecurityConfig.java</code></a>
+        <a class="source-link" href="../backend/user-service/src/main/java/com/spring/userauth/controller/GoogleAuthController.java"><strong>5. Start + exchange endpoints</strong><code>user-service/controller/GoogleAuthController.java</code></a>
+        <a class="source-link" href="../backend/user-service/src/main/java/com/spring/userauth/security/GoogleLoginHandlers.java"><strong>6. Success/failure redirects</strong><code>user-service/security/GoogleLoginHandlers.java</code></a>
+        <a class="source-link" href="../backend/user-service/src/main/java/com/spring/userauth/service/GoogleCustomerService.java"><strong>7. Local customer policy</strong><code>user-service/service/GoogleCustomerService.java</code></a>
+        <a class="source-link" href="../backend/user-service/src/main/java/com/spring/userauth/service/JwtService.java"><strong>8. Issue our JWT</strong><code>user-service/service/JwtService.java</code></a>
+      </div>
+    </section>
+
+    <section id="interview" aria-labelledby="interview-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">05 · INTERVIEW PRACTICE</p><h2 id="interview-title">Ask yourself “why?”</h2><p class="section-intro">Try answering aloud before opening each suggested answer.</p></div>
+      </div>
+      <div class="qa-list">
+        <details><summary>Is Google sign-in OAuth 2.0 or OpenID Connect?</summary><p>Both: it uses the OAuth 2.0 Authorization Code flow with OIDC for standardized user authentication and an ID token.</p></details>
+        <details><summary>Why not use the email address as the provider identity key?</summary><p>Email can change and is profile data. A validated issuer and subject pair identifies the external account; local roles remain controlled by our app.</p></details>
+        <details><summary>Why exchange the authorization code on the backend?</summary><p>This confidential client can protect its client secret, validate the provider response, apply account policy, and issue an app-specific credential without exposing secrets to JavaScript.</p></details>
+        <details><summary>What do state, nonce, and CSRF each protect?</summary><p>State correlates the OAuth request and callback. OIDC nonce binds the ID token to its authentication request. The CSRF token protects the later cookie-backed exchange POST. They are related security controls, not interchangeable values.</p></details>
+        <details><summary>Why issue an application JWT instead of using Google's token?</summary><p>Our APIs need our own issuer, audience, local user ID, roles, and expiry. Google tokens are for the Google client or Google APIs, not generic credentials for this application.</p></details>
+        <details><summary>Why keep a temporary session if APIs use JWT?</summary><p>The redirect flow needs short-lived state across browser round trips. The OAuth session is consumed during the exchange; ordinary API requests use stateless application JWTs.</p></details>
+        <details><summary>What happens if a user already has a password account with the same email?</summary><p>This project denies an automatic link. The user should sign in to the existing account and complete a deliberate verified account-linking flow if linking is supported.</p></details>
+      </div>
+    </section>
+
+    <section aria-labelledby="summary-title">
+      <div class="takeaway">
+        <p class="eyebrow" id="summary-title">YOUR 30-SECOND ANSWER</p>
+        <blockquote>“Google authenticates the customer using OIDC. Our backend validates the provider response, resolves a local account by issuer and subject, and checks the local customer role. It then exchanges a short-lived, CSRF-protected OAuth session for our own JWT. Our APIs trust that JWT—not Google's token.”</blockquote>
+      </div>
+    </section>
+
+    <section id="full-guide">
+      <div class="section-heading">
+        <div><p class="eyebrow">GO DEEPER</p><h2>Continue learning</h2></div>
+      </div>
+      <div class="source-grid">
+        <a class="source-link" href="GOOGLE_OAUTH2_INTERVIEW_GUIDE.md"><strong>Full written implementation + interview guide ↗</strong><code>Concepts, configuration, security choices, and troubleshooting</code></a>
+        <a class="source-link" href="../backend/user-service/src/test/java/com/spring/userauth/GoogleLoginSecurityTests.java"><strong>Read the security tests ↗</strong><code>Scenarios: CSRF, roles, sessions, and identity collisions</code></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer-inner"><span>Everyday · OAuth 2.0 / OIDC Learning Lab</span><span>Educational diagram only · it does not perform a real login</span></div>
+  </footer>
+  <script>
+    (() => {
+      const steps = [
+        { label: "Step 1 · Browser", title: "The customer clicks “Continue with Google”", copy: "The React login page navigates to user-service. It does not collect the Google password, and it never receives the OAuth client secret.", question: "Interview prompt: Why does the browser start at our backend?" },
+        { label: "Step 2 · Backend", title: "Create a short-lived login session", copy: "The customer-start endpoint marks this session as a customer flow, then redirects to Spring Security. That audience marker prevents customer and administrator exchanges from being mixed.", question: "Interview prompt: Why record the login audience server-side?" },
+        { label: "Step 3 · Google", title: "Authorize with state and OIDC nonce", copy: "Spring builds the authorization request and sends the browser to Google. State correlates the request with its callback; OIDC nonce binds the eventual ID token to this request.", question: "Interview prompt: Are state, nonce, and CSRF the same thing?" },
+        { label: "Step 4 · Backend callback", title: "Exchange the one-time authorization code", copy: "Google redirects back to the registered user-service callback. The backend exchanges the code with Google using server-held client credentials. Spring validates the OIDC response.", question: "Interview prompt: Why must the client secret stay server-side?" },
+        { label: "Step 5 · Local account", title: "Resolve identity; apply our authorization policy", copy: "The validated issuer and subject identify the Google account. This project requires a verified email for first-time customer creation, never silently links an existing email, and assigns only ROLE_CUSTOMER.", question: "Interview prompt: Does successful Google authentication make someone an admin?" },
+        { label: "Step 6 · Frontend callback", title: "Return without putting credentials in the URL", copy: "The backend redirects to the fixed customer callback at localhost:5174/auth/callback. Tokens are not query parameters; the short-lived HttpOnly session cookie carries the temporary server-side login state.", question: "Interview prompt: Why not redirect with the token in the URL?" },
+        { label: "Step 7 · CSRF exchange", title: "Trade the temporary session for our app JWT", copy: "The frontend fetches a session-bound CSRF token and posts it in the expected header with the cookie. The backend checks session, audience, deadline, and current account again, issues its JWT, then invalidates the OAuth session.", question: "Interview prompt: Why is CSRF protection needed on this POST?" },
+        { label: "Step 8 · Application APIs", title: "Use our JWT for our APIs", copy: "The frontend confirms the local profile and customer role. Subsequent API calls send the application JWT as a bearer token. Google ID and access tokens are not accepted as app API credentials.", question: "Interview prompt: How is an ID token different from an API access token?" },
+      ];
+
+      const nodes = [...document.querySelectorAll(".node[data-step]")];
+      const dots = document.getElementById("step-dots");
+      const previous = document.getElementById("previous-step");
+      const next = document.getElementById("next-step");
+      const label = document.getElementById("lesson-label");
+      const count = document.getElementById("lesson-count");
+      const title = document.getElementById("lesson-title");
+      const copy = document.getElementById("lesson-copy");
+      const question = document.getElementById("lesson-question");
+      let active = 0;
+
+      function selectStep(index, focusDot = false) {
+        active = Math.max(0, Math.min(steps.length - 1, index));
+        const step = steps[active];
+        label.textContent = step.label;
+        count.textContent = `${active + 1} of ${steps.length}`;
+        title.textContent = step.title;
+        copy.textContent = step.copy;
+        question.textContent = step.question;
+        previous.disabled = active === 0;
+        next.disabled = active === steps.length - 1;
+        nodes.forEach((node) => node.setAttribute("aria-pressed", Number(node.dataset.step) === active ? "true" : "false"));
+        [...dots.children].forEach((dot, indexInDots) => {
+          if (indexInDots === active) dot.setAttribute("aria-current", "step");
+          else dot.removeAttribute("aria-current");
+        });
+        if (focusDot) dots.children[active].focus();
+      }
+
+      steps.forEach((_, index) => {
+        const dot = document.createElement("button");
+        dot.className = "step-dot";
+        dot.type = "button";
+        dot.setAttribute("aria-label", `Go to step ${index + 1}`);
+        dot.addEventListener("click", () => selectStep(index));
+        dots.append(dot);
+      });
+      nodes.forEach((node) => node.addEventListener("click", () => selectStep(Number(node.dataset.step))));
+      previous.addEventListener("click", () => selectStep(active - 1, true));
+      next.addEventListener("click", () => selectStep(active + 1, true));
+      document.addEventListener("keydown", (event) => {
+        if (event.altKey && event.key === "ArrowRight") selectStep(active + 1);
+        if (event.altKey && event.key === "ArrowLeft") selectStep(active - 1);
+      });
+      selectStep(0);
+    })();
+  </script>
+</body>
+</html>

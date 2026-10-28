@@ -19,7 +19,7 @@ import com.spring.product.repository.ProductRepository;
 import com.spring.product.service.ProductService;
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/api/products")
 public class ProductController {
 
 	private static ProductService productService;
