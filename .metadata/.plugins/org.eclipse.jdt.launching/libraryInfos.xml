@@ -13,4 +13,5 @@
             <entry path="null"/>
         </endorsedDirs>
     </libraryInfo>
+    <libraryInfo home="C:\Program Files\Eclipse Adoptium\jdk-25.0.4.101-hotspot" version="25.0.4.1"/>
 </libraryInfos>

@@ -29,7 +29,7 @@ public class SecurityConfig {
     SecurityFilterChain googleLoginChain(HttpSecurity http, GoogleLoginHandlers handlers) throws Exception {
         http.securityMatcher("/oauth2/authorization/google", "/login/oauth2/code/google",
                         "/api/auth/csrf", "/api/auth/google/**")
-                .cors(cors -> {})
+                //.cors(cors -> {})
                 .csrf(csrf -> {})
                 .requestCache(cache -> cache.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
@@ -52,7 +52,7 @@ public class SecurityConfig {
     @Order(2)
     SecurityFilterChain apiChain(HttpSecurity http, JwtAuthenticationFilter jwt) throws Exception {
         http.csrf(csrf -> csrf.disable())
-                .cors(cors -> {})
+                //.cors(cors -> {})
                 .requestCache(cache -> cache.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .securityContext(context -> context.securityContextRepository(new NullSecurityContextRepository()))
